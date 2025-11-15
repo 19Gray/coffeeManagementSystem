@@ -1,23 +1,17 @@
-import express from "express"
+import express from "express";
+import {
+  register,
+  login,
+  getProfile,
+  updateProfile,
+} from "../controllers/auth.controller.js";
+import { protect } from "../middlewares/auth.middleware.js";
 
-const router = express.router()
+const router = express.Router();
 
-router.post("/login")
-router.post("/register")
-router.post("/verify")
-router.post("/resend-otp")
-router.route("/profile").get().put()
+router.post("/register", register);
+router.post("/login", login);
+router.get("/profile", protect, getProfile);
+router.put("/profile", protect, updateProfile);
 
-/**
- * Admin routes for user Management
- */
-router.route("/users").get(protect, admin, getUsers)
-
-router
-    .route("/users/:id")
-    .get(protect, admin, getUserById)
-    .put(protect, admin, updateUser)
-    .delete(protect, admin, deleteUser)
-
-
-exportdefault router
+export default router;
