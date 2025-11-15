@@ -1,34 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react'
+import AuthContext from './context/AuthContext'
+import LoginPage from './pages/LoginPage'
+import DashboardLayout from './layouts/DashboardLayout'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    const userData = localStorage.getItem('user')
+    
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData))
+      } catch (e) {
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('user')
+      }
+    }
+    setLoading(false)
+  }, [])
+
+  if (loading) {
+    return <div className="loading-spinner">Loading...</div>
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <AuthContext.Provider value={{ user, setUser }}>
+      {user ? <DashboardLayout /> : <LoginPage />}
+    </AuthContext.Provider>
   )
 }
 
