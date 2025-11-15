@@ -9,8 +9,8 @@ import cors from "cors";
  * Local imports
  */
 import { notFound, errorHandler } from "./middlewares/error.middleware.js";
-import connectDB from "./config/database";
-import authRoutes from "./routes/auth.routes";
+import connectDB from "./config/database.js";
+import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import farmRoutes from "./routes/farm.routes.js";
 import productionRoutes from "./routes/production.routes.js";
@@ -31,6 +31,16 @@ const app = express();
  */
 app.use(cors());
 app.use(express.json());
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid JSON payload",
+      timestamp: new Date().toISOString(),
+    });
+  }
+  next();
+});
 
 /**
  * Routes
@@ -43,14 +53,31 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/inventory", inventoryRoutes);
 
 /**
- * Error Handleing middleware
- *
+ * Error Handling middleware
  */
 app.use(notFound);
 app.use(errorHandler);
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("[Unhandled Rejection]", {
+    timestamp: new Date().toISOString(),
+    reason: reason instanceof Error ? reason.message : reason,
+    promise,
+  });
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[Uncaught Exception]", {
+    timestamp: new Date().toISOString(),
+    message: error.message,
+    stack: error.stack,
+  });
+  process.exit(1);
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
 export default app;
