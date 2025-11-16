@@ -2,7 +2,7 @@ import { useState, useContext } from 'react'
 import AuthContext from '../context/AuthContext'
 
 function LoginPage() {
-  const { setUser } = useContext(AuthContext)
+  const { login, signup, setUser } = useContext(AuthContext)
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,34 +17,14 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup'
-      const payload = isLogin
-        ? { email, password }
-        : { name, email, password, role }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed')
+      if (isLogin) {
+        await login(email, password)
+      } else {
+        const backendRole = role.replace('_', '-')
+        await signup(name, email, password, backendRole)
       }
-
-      localStorage.setItem('authToken', data.token)
-      const userData = {
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        role: data.user.role,
-      }
-      localStorage.setItem('user', JSON.stringify(userData))
-      setUser(userData)
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Authentication failed')
     } finally {
       setLoading(false)
     }
@@ -123,11 +103,11 @@ function LoginPage() {
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
-                  <option value="farm_worker">Farm Worker</option>
+                  <option value="farm-worker">Farm Worker</option>
                   <option value="supervisor">Supervisor</option>
                   <option value="agronomist">Agronomist</option>
-                  <option value="operations_manager">Operations Manager</option>
-                  <option value="ict_manager">ICT Manager</option>
+                  <option value="operations-manager">Operations Manager</option>
+                  <option value="ict-manager">ICT Manager</option>
                   <option value="ceo">CEO</option>
                 </select>
               </div>

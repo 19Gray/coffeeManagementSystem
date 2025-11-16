@@ -16,7 +16,7 @@ import DashboardMetricsPage from '../pages/DashboardMetricsPage'
 import SettingsPage from '../pages/SettingsPage'
 
 function DashboardLayout() {
-  const { user } = useContext(AuthContext)
+  const { user, logout } = useContext(AuthContext)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [currentPage, setCurrentPage] = useState('dashboard')
 
@@ -65,7 +65,7 @@ function DashboardLayout() {
         onPageChange={setCurrentPage}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <Header onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} onLogout={logout} />
         <main className="flex-1 overflow-auto p-6 bg-light">{getDashboard()}</main>
       </div>
     </div>

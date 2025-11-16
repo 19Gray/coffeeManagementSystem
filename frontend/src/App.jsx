@@ -1,35 +1,25 @@
 import { useState, useEffect } from 'react'
-import AuthContext from './context/AuthContext'
+import AuthProvider from './context/AuthProvider'
 import LoginPage from './pages/LoginPage'
 import DashboardLayout from './layouts/DashboardLayout'
+import { useContext } from 'react'
+import AuthContext from './context/AuthContext'
 
-function App() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    const userData = localStorage.getItem('user')
-    
-    if (token && userData) {
-      try {
-        setUser(JSON.parse(userData))
-      } catch (e) {
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('user')
-      }
-    }
-    setLoading(false)
-  }, [])
+function AppContent() {
+  const { user, loading } = useContext(AuthContext)
 
   if (loading) {
     return <div className="loading-spinner">Loading...</div>
   }
 
+  return user ? <DashboardLayout /> : <LoginPage />
+}
+
+function App() {
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      {user ? <DashboardLayout /> : <LoginPage />}
-    </AuthContext.Provider>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 

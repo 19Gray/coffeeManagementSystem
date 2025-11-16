@@ -1,40 +1,46 @@
-import { useState } from 'react'
 import KPICard from '../../components/KPICard'
 import ChartComponent from '../../components/ChartComponent'
 import FarmsTable from '../../components/FarmsTable'
 import ProductionTable from '../../components/ProductionTable'
+import { useFarms } from '../../hooks/useFarms'
+import { useProduction } from '../../hooks/useProduction'
 
 function CEODashboard({ currentPage, setCurrentPage }) {
-  const [farms, setFarms] = useState([
-    { id: 1, name: 'Rift Valley Farm', location: 'Nakuru', acres: 250, status: 'Active', workers: 45 },
-    { id: 2, name: 'Mount Kenya Estate', location: 'Murang\'a', acres: 180, status: 'Active', workers: 32 },
-    { id: 3, name: 'Central Highlands', location: 'Kiambu', acres: 320, status: 'Active', workers: 58 },
-    { id: 4, name: 'Nyambene Range', location: 'Meru', acres: 210, status: 'Active', workers: 38 },
-  ])
+  const { farms, loading: farmsLoading } = useFarms()
+  const { production, loading: prodLoading } = useProduction()
 
-  const [production, setProduction] = useState([
-    { id: 1, farmName: 'Rift Valley Farm', month: 'October', bags: 650, quality: 'Grade A', revenue: 'KSH 325,000' },
-    { id: 2, farmName: 'Mount Kenya Estate', month: 'October', bags: 480, quality: 'Grade A', revenue: 'KSH 240,000' },
-    { id: 3, farmName: 'Central Highlands', month: 'October', bags: 720, quality: 'Grade A+', revenue: 'KSH 360,000' },
-    { id: 4, farmName: 'Nyambene Range', month: 'October', bags: 600, quality: 'Grade A', revenue: 'KSH 300,000' },
-  ])
+  // Calculate KPIs from real data
+  const calculateKPIs = () => {
+    const totalProduction = production.reduce((sum, p) => sum + (p.quantity || 0), 0)
+    const avgQuality = production.length > 0 ? production.length : 0
+    const activeFarms = farms.filter(f => f.status === 'Active').length
+    const totalWorkers = farms.reduce((sum, f) => sum + (f.workers || 0), 0)
 
-  const kpis = [
-    { label: 'Total Production', value: '2,450 bags', change: '+12%', trend: 'up' },
-    { label: 'Monthly Revenue', value: 'KSH 1,225,000', change: '+8%', trend: 'up' },
-    { label: 'Active Farms', value: '18', change: '+2', trend: 'up' },
-    { label: 'Workforce', value: '245', change: '+5%', trend: 'up' },
-  ]
+    return [
+      { label: 'Total Production', value: `${totalProduction} bags`, change: '+12%', trend: 'up' },
+      { label: 'Monthly Revenue', value: 'KSH 1,225,000', change: '+8%', trend: 'up' },
+      { label: 'Active Farms', value: activeFarms.toString(), change: '+2', trend: 'up' },
+      { label: 'Workforce', value: totalWorkers.toString(), change: '+5%', trend: 'up' },
+    ]
+  }
+
+  const loading = farmsLoading || prodLoading
 
   if (currentPage !== 'dashboard') {
     if (currentPage === 'farms') {
-      return <FarmsTable farms={farms} setFarms={setFarms} />
+      return <FarmsTable farms={farms} />
     }
     if (currentPage === 'production') {
-      return <ProductionTable production={production} setProduction={setProduction} />
+      return <ProductionTable production={production} />
     }
     return null
   }
+
+  if (loading) {
+    return <div className="p-6">Loading dashboard...</div>
+  }
+
+  const kpis = calculateKPIs()
 
   return (
     <div className="space-y-6">
@@ -61,12 +67,10 @@ function CEODashboard({ currentPage, setCurrentPage }) {
         />
         <ChartComponent
           title="Revenue by Farm"
-          data={[
-            { name: 'Rift Valley', value: 32500 },
-            { name: 'Mt Kenya', value: 24000 },
-            { name: 'C. Highlands', value: 36000 },
-            { name: 'Nyambene', value: 30000 },
-          ]}
+          data={farms.slice(0, 4).map(farm => ({
+            name: farm.name,
+            value: farm.totalProduction || 0,
+          }))}
         />
       </div>
 
@@ -78,8 +82,7 @@ function CEODashboard({ currentPage, setCurrentPage }) {
               <tr>
                 <th className="px-6 py-3 text-left font-semibold text-gray-700">Farm Name</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-700">Location</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Acres</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Workers</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-700">Area</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
               </tr>
             </thead>
@@ -88,9 +91,8 @@ function CEODashboard({ currentPage, setCurrentPage }) {
                 <tr key={farm.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-3 text-gray-900">{farm.name}</td>
                   <td className="px-6 py-3 text-gray-600">{farm.location}</td>
-                  <td className="px-6 py-3 text-gray-600">{farm.acres}</td>
-                  <td className="px-6 py-3 text-gray-600">{farm.workers}</td>
-                  <td className="px-6 py-3"><span className="bg-green-100 text-success px-3 py-1 rounded-full text-xs font-semibold">{farm.status}</span></td>
+                  <td className="px-6 py-3 text-gray-600">{farm.area}</td>
+                  <td className="px-6 py-3"><span className="bg-green-100 text-success px-3 py-1 rounded-full text-xs font-semibold">{farm.status || 'Active'}</span></td>
                 </tr>
               ))}
             </tbody>
