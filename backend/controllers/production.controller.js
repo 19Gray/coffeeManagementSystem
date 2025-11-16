@@ -6,8 +6,8 @@ export const getAllProduction = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      data: productions,
       count: productions.length,
-      productions,
     });
   } catch (error) {
     next(error);
@@ -26,7 +26,7 @@ export const getProductionById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      production,
+      data: production,
     });
   } catch (error) {
     next(error);
@@ -50,7 +50,7 @@ export const createProduction = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      production,
+      data: production,
     });
   } catch (error) {
     next(error);
@@ -74,7 +74,7 @@ export const updateProduction = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      production,
+      data: production,
     });
   } catch (error) {
     next(error);
@@ -92,6 +92,7 @@ export const deleteProduction = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Production record deleted successfully",
+      data: production,
     });
   } catch (error) {
     next(error);

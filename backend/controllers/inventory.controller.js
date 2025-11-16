@@ -6,8 +6,8 @@ export const getAllInventory = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      data: inventory,
       count: inventory.length,
-      inventory,
     });
   } catch (error) {
     next(error);
@@ -24,7 +24,7 @@ export const getInventoryById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      item,
+      data: item,
     });
   } catch (error) {
     next(error);
@@ -46,7 +46,7 @@ export const createInventory = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      item,
+      data: item,
     });
   } catch (error) {
     next(error);
@@ -66,7 +66,7 @@ export const updateInventory = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      item,
+      data: item,
     });
   } catch (error) {
     next(error);
@@ -84,6 +84,7 @@ export const deleteInventory = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Inventory item deleted successfully",
+      data: item,
     });
   } catch (error) {
     next(error);

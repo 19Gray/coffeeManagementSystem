@@ -6,8 +6,8 @@ export const getAllFarms = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      data: farms,
       count: farms.length,
-      farms,
     });
   } catch (error) {
     next(error);
@@ -24,7 +24,7 @@ export const getFarmById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      farm,
+      data: farm,
     });
   } catch (error) {
     next(error);
@@ -45,7 +45,7 @@ export const createFarm = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      farm,
+      data: farm,
     });
   } catch (error) {
     next(error);
@@ -65,7 +65,7 @@ export const updateFarm = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      farm,
+      data: farm,
     });
   } catch (error) {
     next(error);
@@ -83,6 +83,7 @@ export const deleteFarm = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Farm deleted successfully",
+      data: farm,
     });
   } catch (error) {
     next(error);

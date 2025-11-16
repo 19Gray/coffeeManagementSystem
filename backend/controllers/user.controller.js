@@ -6,8 +6,8 @@ export const getUsers = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      data: users,
       count: users.length,
-      users,
     });
   } catch (error) {
     next(error);
@@ -24,7 +24,7 @@ export const getUserById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      user,
+      data: user,
     });
   } catch (error) {
     next(error);
@@ -47,7 +47,7 @@ export const updateUser = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      user,
+      data: user,
     });
   } catch (error) {
     next(error);
@@ -65,6 +65,7 @@ export const deleteUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "User deleted successfully",
+      data: user,
     });
   } catch (error) {
     next(error);

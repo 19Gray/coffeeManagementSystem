@@ -6,8 +6,8 @@ export const getAllTasks = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      data: tasks,
       count: tasks.length,
-      tasks,
     });
   } catch (error) {
     next(error);
@@ -26,7 +26,7 @@ export const getTaskById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      task,
+      data: task,
     });
   } catch (error) {
     next(error);
@@ -52,7 +52,7 @@ export const createTask = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      task,
+      data: task,
     });
   } catch (error) {
     next(error);
@@ -74,7 +74,7 @@ export const updateTask = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      task,
+      data: task,
     });
   } catch (error) {
     next(error);
@@ -92,6 +92,7 @@ export const deleteTask = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Task deleted successfully",
+      data: task,
     });
   } catch (error) {
     next(error);
