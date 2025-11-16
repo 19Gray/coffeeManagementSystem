@@ -1,13 +1,13 @@
 import { useState, useContext } from 'react'
 import AuthContext from '../context/AuthContext'
+import { useNavigate, Link } from 'react-router-dom'
+import { FiMail, FiLock } from 'react-icons/fi'
 
 function LoginPage() {
-  const { login, signup, setUser } = useContext(AuthContext)
-  const [isLogin, setIsLogin] = useState(true)
+  const { login, setUser } = useContext(AuthContext)
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [role, setRole] = useState('farm_worker')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -17,14 +17,10 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      if (isLogin) {
-        await login(email, password)
-      } else {
-        const backendRole = role.replace('_', '-')
-        await signup(name, email, password, backendRole)
-      }
+      await login(email, password)
+      navigate('/dashboard')
     } catch (err) {
-      setError(err.message || 'Authentication failed')
+      setError(err.message || 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -39,37 +35,33 @@ function LoginPage() {
     }
     localStorage.setItem('user', JSON.stringify(guestUser))
     setUser(guestUser)
+    navigate('/dashboard')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-primary flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-amber-100">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-primary mb-2">Great Rift Coffee</h1>
-            <p className="text-gray-600">Management Dashboard</p>
+            <img src="/great-rift-logo.png" alt="Great Rift" className="h-12 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-amber-900 mb-2">Great Rift Coffee</h1>
+            <p className="text-gray-600">Management System</p>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="form-group">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
-                  required={!isLogin}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-            )}
-
             <div className="form-group">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center gap-2">
+                  <FiMail className="w-4 h-4" />
+                  Email
+                </div>
+              </label>
               <input
                 id="email"
                 type="email"
@@ -77,12 +69,17 @@ function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center gap-2">
+                  <FiLock className="w-4 h-4" />
+                  Password
+                </div>
+              </label>
               <input
                 id="password"
                 type="password"
@@ -90,31 +87,16 @@ function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
               />
             </div>
 
-            {!isLogin && (
-              <div className="form-group">
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                >
-                  <option value="farm-worker">Farm Worker</option>
-                  <option value="supervisor">Supervisor</option>
-                  <option value="agronomist">Agronomist</option>
-                  <option value="operations-manager">Operations Manager</option>
-                  <option value="ict-manager">ICT Manager</option>
-                  <option value="ceo">CEO</option>
-                </select>
-              </div>
-            )}
-
-            <button type="submit" className="btn-primary w-full py-2 text-lg" disabled={loading}>
-              {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}
+            <button
+              type="submit"
+              className="w-full bg-amber-700 text-white py-2 rounded-lg font-semibold hover:bg-amber-800 transition disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
@@ -127,24 +109,17 @@ function LoginPage() {
           <button
             onClick={handleGuestLogin}
             type="button"
-            className="btn-secondary w-full py-2 text-lg"
+            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition"
           >
             Continue as Guest
           </button>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              {isLogin ? "Don't have an account? " : 'Already have an account? '}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin)
-                  setError('')
-                }}
-                className="text-primary font-semibold hover:text-secondary transition-colors"
-              >
-                {isLogin ? 'Sign Up' : 'Sign In'}
-              </button>
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-amber-700 font-semibold hover:text-amber-800 transition">
+                Sign Up
+              </Link>
             </p>
           </div>
         </div>

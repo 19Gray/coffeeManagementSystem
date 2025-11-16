@@ -1,4 +1,5 @@
 import { useContext } from 'react'
+import AuthContext from '../context/AuthContext'
 import {
   FiBarChart2,
   FiGitBranch,
@@ -8,11 +9,13 @@ import {
   FiFileText,
   FiUsers,
   FiSettings,
-  FiMenu,
 } from 'react-icons/fi'
+import { getPermittedMenuItems } from '../config/permissions'
 
 function Sidebar({ isOpen, onToggle, currentPage, onPageChange }) {
-  const menuItems = [
+  const { user } = useContext(AuthContext)
+  
+  const allMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: FiBarChart2 },
     { id: 'farms', label: 'Farms', icon: FiGitBranch },
     { id: 'production', label: 'Production', icon: FiBox },
@@ -23,10 +26,15 @@ function Sidebar({ isOpen, onToggle, currentPage, onPageChange }) {
     { id: 'settings', label: 'Settings', icon: FiSettings },
   ]
 
+  const permittedItems = allMenuItems.filter(item => {
+    const permitted = getPermittedMenuItems(user?.role || 'guest')
+    return permitted.includes(item.id)
+  })
+
   return (
     <aside className={`${isOpen ? 'w-64' : 'w-20'} bg-primary text-white transition-all duration-300 shadow-lg overflow-y-auto`}>
       <nav className="space-y-2 p-4">
-        {menuItems.map((item) => {
+        {permittedItems.map((item) => {
           const IconComponent = item.icon
           return (
             <button

@@ -72,6 +72,21 @@ export const authAPI = {
     }),
 };
 
+// Signup Code APIs
+export const signupCodeAPI = {
+  verify: (code, role) =>
+    apiCall("/auth/codes/verify", {
+      method: "POST",
+      body: { code, role },
+    }),
+  generate: (role) =>
+    apiCall("/auth/codes/generate", {
+      method: "POST",
+      body: { role },
+    }),
+  getAll: () => apiCall("/auth/codes"),
+};
+
 // Farms APIs
 export const farmsAPI = {
   getAll: () => apiCall("/farms"),

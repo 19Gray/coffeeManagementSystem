@@ -16,6 +16,7 @@ import farmRoutes from "./routes/farm.routes.js";
 import productionRoutes from "./routes/production.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
+import signupCodeRoutes from "./routes/signupCode.routes.js"; // Added signup code routes
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use((err, req, res, next) => {
  * Routes
  */
 app.use("/api/auth", authRoutes);
+app.use("/api/auth/codes", signupCodeRoutes); // Added signup code routes
 app.use("/api/users", userRoutes);
 app.use("/api/farms", farmRoutes);
 app.use("/api/production", productionRoutes);
