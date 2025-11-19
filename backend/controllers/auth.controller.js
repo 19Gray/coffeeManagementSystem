@@ -3,6 +3,15 @@ import SignupCode from "../models/signupCode.model.js";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import AppError from "../utils/AppError.js";
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} from "../utils/emailService.js";
+import {
+  generateVerificationToken,
+  generateResetToken,
+  hashToken,
+} from "../utils/tokenUtils.js";
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -43,7 +52,7 @@ export const register = asyncHandler(async (req, res, next) => {
 
     // Mark code as used
     code.isUsed = true;
-    code.usedBy = req.body.userId; // Will be set after user creation
+    code.usedBy = req.body.userId;
     await code.save();
   } else if (role === "farm-worker") {
     // Farm workers can signup without code
@@ -53,13 +62,26 @@ export const register = asyncHandler(async (req, res, next) => {
     );
   }
 
+  const verificationToken = generateVerificationToken();
+  const hashedToken = hashToken(verificationToken);
+
   const user = await User.create({
     name,
     email,
     password,
     role: role || "farm-worker",
     phone,
+    verificationToken: hashedToken,
+    verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
   });
+
+  // Send verification email
+  try {
+    await sendVerificationEmail(user.email, verificationToken);
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+    // Don't fail registration if email fails, but log it
+  }
 
   // Update code with usedBy
   if (signupCode) {
@@ -74,11 +96,48 @@ export const register = asyncHandler(async (req, res, next) => {
   res.status(201).json({
     success: true,
     token,
+    message:
+      "Registration successful. Please check your email to verify your account.",
     user: {
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      isVerified: user.isVerified,
+    },
+  });
+});
+
+export const verifyEmail = asyncHandler(async (req, res, next) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return next(new AppError("Verification token is required", 400));
+  }
+
+  const hashedToken = hashToken(token);
+  const user = await User.findOne({
+    verificationToken: hashedToken,
+    verificationTokenExpiry: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError("Invalid or expired verification token", 400));
+  }
+
+  user.isVerified = true;
+  user.verificationToken = null;
+  user.verificationTokenExpiry = null;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Email verified successfully",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      isVerified: user.isVerified,
     },
   });
 });
@@ -102,6 +161,12 @@ export const login = asyncHandler(async (req, res, next) => {
     return next(new AppError("Invalid credentials", 401));
   }
 
+  if (!user.isVerified) {
+    return next(
+      new AppError("Please verify your email before logging in", 403)
+    );
+  }
+
   const token = generateToken(user._id);
 
   res.status(200).json({
@@ -112,6 +177,78 @@ export const login = asyncHandler(async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      isVerified: user.isVerified,
+    },
+  });
+});
+
+export const forgotPassword = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return next(new AppError("Please provide your email", 400));
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  const resetToken = generateResetToken();
+  const hashedToken = hashToken(resetToken);
+
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  await user.save();
+
+  try {
+    await sendPasswordResetEmail(user.email, resetToken);
+  } catch (error) {
+    user.resetPasswordToken = null;
+    user.resetPasswordExpiry = null;
+    await user.save();
+    return next(new AppError("Failed to send password reset email", 500));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Password reset email sent",
+  });
+});
+
+export const resetPassword = asyncHandler(async (req, res, next) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return next(new AppError("Token and password are required", 400));
+  }
+
+  const hashedToken = hashToken(token);
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpiry: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError("Invalid or expired reset token", 400));
+  }
+
+  user.password = password;
+  user.resetPasswordToken = null;
+  user.resetPasswordExpiry = null;
+  await user.save();
+
+  const authToken = generateToken(user._id);
+
+  res.status(200).json({
+    success: true,
+    message: "Password reset successful",
+    token: authToken,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
     },
   });
 });

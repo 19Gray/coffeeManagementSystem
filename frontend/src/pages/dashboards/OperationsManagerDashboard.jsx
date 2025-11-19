@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import KPICard from '../../components/KPICard'
-import ChartComponent from '../../components/ChartComponent'
-import TasksTable from '../../components/TasksTable'
+import StatsOverview from '../../components/StatsOverview'
+import DashboardChart from '../../components/DashboardChart'
+import EnhancedDataTable from '../../components/EnhancedDataTable'
+import { FiFilter, FiDownload } from 'react-icons/fi'
 
 function OperationsManagerDashboard({ currentPage, setCurrentPage }) {
   const [tasks, setTasks] = useState([
@@ -21,88 +22,65 @@ function OperationsManagerDashboard({ currentPage, setCurrentPage }) {
 
   if (currentPage !== 'dashboard') {
     if (currentPage === 'production') {
-      return <TasksTable tasks={tasks} setTasks={setTasks} />
+      const taskData = tasks.map(t => ({
+        title: t.title,
+        farm: t.farm,
+        priority: t.priority,
+        status: t.status,
+        date: t.dueDate,
+      }))
+      return <EnhancedDataTable title="Tasks" headers={['Task', 'Farm', 'Priority', 'Status', 'Due Date']} data={taskData} />
     }
     return null
   }
 
+  const taskCompletionData = [
+    { week: 'Week 1', value: 18 },
+    { week: 'Week 2', value: 22 },
+    { week: 'Week 3', value: 19 },
+    { week: 'Week 4', value: 25 },
+  ]
+
+  const resourceAllocationData = [
+    { resource: 'Labor', value: 35 },
+    { resource: 'Equipment', value: 28 },
+    { resource: 'Materials', value: 22 },
+    { resource: 'Transport', value: 15 },
+  ]
+
+  const taskTableData = tasks.slice(0, 5).map(task => ({
+    title: task.title,
+    farm: task.farm,
+    priority: task.priority,
+    status: task.status,
+    date: task.dueDate,
+  }))
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary mb-2">Operations Manager Dashboard</h1>
-        <p className="text-gray-600">Daily operations, task management, and resource allocation</p>
+      <div className="dashboard-header">
+        <h1>Operations Manager Dashboard</h1>
+        <p>Daily operations, task management, and resource allocation</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, idx) => (
-          <KPICard key={idx} {...kpi} />
-        ))}
+      <StatsOverview stats={kpis} />
+
+      <div className="grid-charts">
+        <DashboardChart title="Task Completion by Week" data={taskCompletionData} />
+        <DashboardChart title="Resource Allocation" data={resourceAllocationData} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartComponent
-          title="Task Completion by Week"
-          data={[
-            { week: 'Week 1', value: 18 },
-            { week: 'Week 2', value: 22 },
-            { week: 'Week 3', value: 19 },
-            { week: 'Week 4', value: 25 },
-          ]}
-        />
-        <ChartComponent
-          title="Resource Allocation"
-          data={[
-            { resource: 'Labor', value: 35 },
-            { resource: 'Equipment', value: 28 },
-            { resource: 'Materials', value: 22 },
-            { resource: 'Transport', value: 15 },
-          ]}
-        />
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-primary mb-4">Recent Tasks</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Task Title</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Farm</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Priority</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Due Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {tasks.slice(0, 5).map(task => (
-                <tr key={task.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3 text-gray-900">{task.title}</td>
-                  <td className="px-6 py-3 text-gray-600">{task.farm}</td>
-                  <td className="px-6 py-3">
-                    <span className={`${
-                      task.priority === 'Critical' ? 'bg-red-100 text-danger' :
-                      task.priority === 'High' ? 'bg-orange-100 text-warning' :
-                      'bg-blue-100 text-primary'
-                    } px-3 py-1 rounded-full text-xs font-semibold`}>
-                      {task.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className={`${
-                      task.status === 'Completed' ? 'bg-green-100 text-success' :
-                      task.status === 'In Progress' ? 'bg-blue-100 text-primary' :
-                      'bg-yellow-100 text-warning'
-                    } px-3 py-1 rounded-full text-xs font-semibold`}>
-                      {task.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-gray-600">{task.dueDate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <EnhancedDataTable 
+        title="Recent Tasks" 
+        headers={['Task Title', 'Farm', 'Priority', 'Status', 'Due Date']} 
+        data={taskTableData}
+        actions={
+          <div className="flex gap-2">
+            <button className="btn-secondary flex items-center gap-2"><FiFilter className="w-4 h-4" /> Filter</button>
+            <button className="btn-secondary flex items-center gap-2"><FiDownload className="w-4 h-4" /> Export</button>
+          </div>
+        }
+      />
     </div>
   )
 }

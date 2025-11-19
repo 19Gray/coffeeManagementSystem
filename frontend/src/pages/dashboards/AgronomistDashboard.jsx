@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import KPICard from '../../components/KPICard'
-import ChartComponent from '../../components/ChartComponent'
-import CropHealthTable from '../../components/CropHealthTable'
+import StatsOverview from '../../components/StatsOverview'
+import DashboardChart from '../../components/DashboardChart'
+import EnhancedDataTable from '../../components/EnhancedDataTable'
 
 function AgronomistDashboard({ currentPage, setCurrentPage }) {
   const [cropHealth, setCropHealth] = useState([
@@ -20,111 +20,85 @@ function AgronomistDashboard({ currentPage, setCurrentPage }) {
 
   if (currentPage !== 'dashboard') {
     if (currentPage === 'farms') {
-      return <CropHealthTable cropHealth={cropHealth} setCropHealth={setCropHealth} />
+      const cropData = cropHealth.map(c => ({
+        farm: c.farm,
+        variety: c.variety,
+        score: `${c.healthScore}%`,
+        leafSpot: c.leafSpot,
+        pests: c.pests,
+      }))
+      return <EnhancedDataTable title="Crop Health" headers={['Farm', 'Variety', 'Health Score', 'Leaf Spot', 'Pests']} data={cropData} />
     }
     return null
   }
 
+  const healthScoreData = [
+    { farm: 'Rift Valley', value: 92 },
+    { farm: 'Mt Kenya', value: 88 },
+    { farm: 'C. Highland', value: 95 },
+    { farm: 'Nyambene', value: 85 },
+  ]
+
+  const pestDistributionData = [
+    { pest: 'None', value: 10 },
+    { pest: 'Minor', value: 6 },
+    { pest: 'Moderate', value: 2 },
+  ]
+
+  const cropTableData = cropHealth.map(crop => ({
+    farm: crop.farm,
+    variety: crop.variety,
+    score: `${crop.healthScore}%`,
+    leafSpot: crop.leafSpot,
+    pests: crop.pests,
+    date: crop.lastAssessment,
+  }))
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary mb-2">Agronomist Dashboard</h1>
-        <p className="text-gray-600">Crop health monitoring and agricultural analytics</p>
+      <div className="dashboard-header">
+        <h1>Agronomist Dashboard</h1>
+        <p>Crop health monitoring and agricultural analytics</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, idx) => (
-          <KPICard key={idx} {...kpi} />
-        ))}
+      <StatsOverview stats={kpis} />
+
+      <div className="grid-charts">
+        <DashboardChart title="Average Health Score by Farm" data={healthScoreData} />
+        <DashboardChart title="Pest Distribution" data={pestDistributionData} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartComponent
-          title="Average Health Score by Farm"
-          data={[
-            { farm: 'Rift Valley', value: 92 },
-            { farm: 'Mt Kenya', value: 88 },
-            { farm: 'C. Highland', value: 95 },
-            { farm: 'Nyambene', value: 85 },
-          ]}
-        />
-        <ChartComponent
-          title="Pest Distribution"
-          data={[
-            { pest: 'None', value: 10 },
-            { pest: 'Minor', value: 6 },
-            { pest: 'Moderate', value: 2 },
-          ]}
-        />
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-primary mb-4">Active Alerts</h2>
+      <div className="chart-container">
+        <h3 className="chart-title">Active Alerts</h3>
         <div className="space-y-3">
-          <div className="border-l-4 border-danger bg-red-50 p-4 rounded">
+          <div className="border-l-4 border-danger bg-danger/10 p-4 rounded-lg">
             <div className="flex items-start gap-4">
               <span className="text-2xl">⚠️</span>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900">High Pest Activity - Mount Kenya Estate</h4>
-                <p className="text-sm text-gray-600 mt-1">Moderate pest infestation detected. Recommend immediate intervention.</p>
+                <h4 className="font-semibold text-slate-100">High Pest Activity - Mount Kenya Estate</h4>
+                <p className="text-sm text-slate-400 mt-1">Moderate pest infestation detected. Recommend immediate intervention.</p>
               </div>
-              <span className="text-xs text-gray-500 whitespace-nowrap">Today</span>
+              <span className="text-xs text-slate-500 whitespace-nowrap">Today</span>
             </div>
           </div>
-          <div className="border-l-4 border-warning bg-yellow-50 p-4 rounded">
+          <div className="border-l-4 border-warning bg-warning/10 p-4 rounded-lg">
             <div className="flex items-start gap-4">
               <span className="text-2xl">!</span>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900">Leaf Spot Disease - Nyambene Range</h4>
-                <p className="text-sm text-gray-600 mt-1">Moderate leaf spot detected. Monitor and consider fungicide treatment.</p>
+                <h4 className="font-semibold text-slate-100">Leaf Spot Disease - Nyambene Range</h4>
+                <p className="text-sm text-slate-400 mt-1">Moderate leaf spot detected. Monitor and consider fungicide treatment.</p>
               </div>
-              <span className="text-xs text-gray-500 whitespace-nowrap">Yesterday</span>
+              <span className="text-xs text-slate-500 whitespace-nowrap">Yesterday</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-primary mb-4">Crop Health Status</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Farm</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Variety</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Health Score</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Leaf Spot</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Pests</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Last Assessment</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {cropHealth.map(crop => (
-                <tr key={crop.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3 text-gray-900">{crop.farm}</td>
-                  <td className="px-6 py-3 text-gray-600">{crop.variety}</td>
-                  <td className="px-6 py-3">
-                    <span className={`${crop.healthScore >= 90 ? 'text-success' : crop.healthScore >= 80 ? 'text-warning' : 'text-danger'} font-semibold`}>
-                      {crop.healthScore}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className={`${
-                      crop.leafSpot === 'None' ? 'bg-green-100 text-success' :
-                      crop.leafSpot === 'Low' ? 'bg-blue-100 text-primary' :
-                      'bg-yellow-100 text-warning'
-                    } px-3 py-1 rounded-full text-xs font-semibold`}>
-                      {crop.leafSpot}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-gray-600">{crop.pests}</td>
-                  <td className="px-6 py-3 text-gray-600">{crop.lastAssessment}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <EnhancedDataTable 
+        title="Crop Health Status" 
+        headers={['Farm', 'Variety', 'Health Score', 'Leaf Spot', 'Pests', 'Last Assessment']} 
+        data={cropTableData}
+      />
     </div>
   )
 }

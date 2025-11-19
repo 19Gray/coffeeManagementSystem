@@ -2,6 +2,9 @@ import { useState } from 'react'
 import KPICard from '../../components/KPICard'
 import ChartComponent from '../../components/ChartComponent'
 import TeamAssignmentsTable from '../../components/TeamAssignmentsTable'
+import StatsOverview from '../../components/StatsOverview'
+import DashboardChart from '../../components/DashboardChart'
+import EnhancedDataTable from '../../components/EnhancedDataTable'
 
 function SupervisorDashboard({ currentPage, setCurrentPage }) {
   const [assignments, setAssignments] = useState([
@@ -29,114 +32,75 @@ function SupervisorDashboard({ currentPage, setCurrentPage }) {
 
   if (currentPage !== 'dashboard') {
     if (currentPage === 'production') {
-      return <TeamAssignmentsTable assignments={assignments} setAssignments={setAssignments} />
+      const assignmentData = assignments.map(a => ({
+        worker: a.workerName,
+        task: a.task,
+        farm: a.farm,
+        date: a.date,
+        time: a.time,
+        status: a.status,
+      }))
+      return <EnhancedDataTable title="Team Assignments" headers={['Worker', 'Task', 'Farm', 'Date', 'Time', 'Status']} data={assignmentData} />
     }
     return null
   }
 
+  const taskCompletionData = [
+    { week: 'Week 1', value: 42 },
+    { week: 'Week 2', value: 48 },
+    { week: 'Week 3', value: 45 },
+    { week: 'Week 4', value: 51 },
+  ]
+
+  const attendanceData = [
+    { member: 'Peter', value: 98 },
+    { member: 'David', value: 95 },
+    { member: 'Jane', value: 92 },
+    { member: 'Grace', value: 88 },
+  ]
+
+  const assignmentTableData = assignments.slice(0, 5).map(a => ({
+    worker: a.workerName,
+    task: a.task,
+    farm: a.farm,
+    date: a.date,
+    time: a.time,
+    status: a.status,
+  }))
+
+  const teamTableData = teamMembers.slice(0, 5).map(m => ({
+    name: m.name,
+    role: m.role,
+    status: m.status,
+    tasks: m.tasksCompleted.toString(),
+    attendance: m.attendance,
+  }))
+
   return (
     <div className="space-y-6">
-      <div>
+      <div className="dashboard-header">
         <h1 className="text-3xl font-bold text-primary mb-2">Supervisor Dashboard</h1>
         <p className="text-gray-600">Team management, daily assignments, and performance tracking</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, idx) => (
-          <KPICard key={idx} {...kpi} />
-        ))}
+      <StatsOverview stats={kpis} />
+
+      <div className="grid-charts grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DashboardChart title="Tasks Completed This Month" data={taskCompletionData} />
+        <DashboardChart title="Team Attendance Rate" data={attendanceData} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartComponent
-          title="Tasks Completed This Month"
-          data={[
-            { week: 'Week 1', value: 42 },
-            { week: 'Week 2', value: 48 },
-            { week: 'Week 3', value: 45 },
-            { week: 'Week 4', value: 51 },
-          ]}
-        />
-        <ChartComponent
-          title="Team Attendance Rate"
-          data={[
-            { member: 'Peter', value: 98 },
-            { member: 'David', value: 95 },
-            { member: 'Jane', value: 92 },
-            { member: 'Grace', value: 88 },
-          ]}
-        />
-      </div>
+      <EnhancedDataTable 
+        title="Recent Assignments" 
+        headers={['Worker', 'Task', 'Farm', 'Date', 'Time', 'Status']} 
+        data={assignmentTableData}
+      />
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-primary mb-4">Recent Assignments</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Worker</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Task</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Farm</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Date</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Time</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {assignments.slice(0, 5).map(assignment => (
-                <tr key={assignment.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3 text-gray-900">{assignment.workerName}</td>
-                  <td className="px-6 py-3 text-gray-600">{assignment.task}</td>
-                  <td className="px-6 py-3 text-gray-600">{assignment.farm}</td>
-                  <td className="px-6 py-3 text-gray-600">{assignment.date}</td>
-                  <td className="px-6 py-3 text-gray-600">{assignment.time}</td>
-                  <td className="px-6 py-3">
-                    <span className={`${
-                      assignment.status === 'Completed' ? 'bg-green-100 text-success' :
-                      assignment.status === 'In Progress' ? 'bg-blue-100 text-primary' :
-                      'bg-yellow-100 text-warning'
-                    } px-3 py-1 rounded-full text-xs font-semibold`}>
-                      {assignment.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-primary mb-4">Team Members</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Name</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Role</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Tasks Completed</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700">Attendance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {teamMembers.slice(0, 5).map(member => (
-                <tr key={member.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3 text-gray-900">{member.name}</td>
-                  <td className="px-6 py-3 text-gray-600">{member.role}</td>
-                  <td className="px-6 py-3">
-                    <span className="bg-green-100 text-success px-3 py-1 rounded-full text-xs font-semibold">
-                      {member.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-gray-600">{member.tasksCompleted}</td>
-                  <td className="px-6 py-3 text-gray-900 font-medium">{member.attendance}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <EnhancedDataTable 
+        title="Team Members" 
+        headers={['Name', 'Role', 'Status', 'Tasks Completed', 'Attendance']} 
+        data={teamTableData}
+      />
     </div>
   )
 }

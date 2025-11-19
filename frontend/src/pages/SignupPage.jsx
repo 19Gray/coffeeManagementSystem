@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { FiMail, FiLock, FiUser, FiPhone } from 'react-icons/fi'
 import api from '../services/api'
+import { showToast } from '../utils/toastConfig'
 
 function SignupPage() {
   const navigate = useNavigate()
@@ -16,6 +16,7 @@ function SignupPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [codeVerified, setCodeVerified] = useState(false)
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -41,9 +42,12 @@ function SignupPage() {
       if (response.data.success) {
         setCodeVerified(true)
         setError('')
+        showToast.success('Signup code verified successfully!')
       }
     } catch (err) {
-      setError(err.message || 'Invalid signup code')
+      const errorMsg = err.message || 'Invalid signup code'
+      setError(errorMsg)
+      showToast.error(errorMsg)
       setCodeVerified(false)
     } finally {
       setLoading(false)
@@ -57,6 +61,7 @@ function SignupPage() {
 
     if (['agronomist', 'supervisor'].includes(formData.role) && !codeVerified) {
       setError('Please verify your signup code first')
+      showToast.error('Please verify your signup code first')
       setLoading(false)
       return
     }
@@ -72,12 +77,14 @@ function SignupPage() {
       })
 
       if (response.data.success) {
-        localStorage.setItem('authToken', response.data.token)
-        localStorage.setItem('user', JSON.stringify(response.data.user))
-        navigate('/dashboard')
+        showToast.success('Account created! Check your email to verify.')
+        setShowVerificationMessage(true)
+        setTimeout(() => navigate('/login'), 3000)
       }
     } catch (err) {
-      setError(err.message || 'Signup failed')
+      const errorMsg = err.message || 'Signup failed'
+      setError(errorMsg)
+      showToast.error(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -85,29 +92,106 @@ function SignupPage() {
 
   const requiresCode = ['agronomist', 'supervisor'].includes(formData.role)
 
+  if (showVerificationMessage) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f5ede0',
+        padding: '16px'
+      }}>
+        <div style={{ maxWidth: '400px', width: '100%' }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '12px',
+            padding: '40px 32px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>✓</div>
+            <h1 style={{
+              fontSize: '22px',
+              fontWeight: '600',
+              marginBottom: '8px',
+              color: '#5c3d2e'
+            }}>
+              Account Created!
+            </h1>
+            <p style={{ color: '#6b7280', marginBottom: '16px', fontSize: '13px', lineHeight: '1.5' }}>
+              We've sent a verification email to <strong>{formData.email}</strong>. Please check your email and click the verification link to activate your account.
+            </p>
+            <p style={{ color: '#a0957d', fontSize: '12px' }}>Redirecting to login...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50 flex items-center justify-center p-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-amber-100">
-          <div className="text-center mb-8">
-            <img src="/great-rift-logo.png" alt="Great Rift" className="h-12 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-amber-900 mb-2">Create Account</h1>
-            <p className="text-gray-600">Join Great Rift Coffee Management</p>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#f5ede0',
+      padding: '16px',
+      paddingTop: '32px',
+      paddingBottom: '32px'
+    }}>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          padding: '40px 32px',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <div style={{
+              fontSize: '32px',
+              marginBottom: '12px',
+              fontWeight: 'bold',
+              color: '#b8a887'
+            }}>
+              ☕
+            </div>
+            <h1 style={{
+              fontSize: '22px',
+              fontWeight: '600',
+              marginBottom: '4px',
+              color: '#5c3d2e'
+            }}>
+              Create Account
+            </h1>
+            <p style={{ color: '#8b7355', fontSize: '13px', fontWeight: '500' }}>
+              Join Great Rift Coffee Management
+            </p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <div style={{
+              backgroundColor: '#fee2e2',
+              color: '#991b1b',
+              padding: '12px 14px',
+              borderRadius: '6px',
+              marginBottom: '20px',
+              fontSize: '13px'
+            }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="form-group">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <FiUser className="w-4 h-4" />
-                  Full Name
-                </div>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }} htmlFor="name">
+                Full Name
               </label>
               <input
                 id="name"
@@ -117,16 +201,28 @@ function SignupPage() {
                 onChange={handleInputChange}
                 placeholder="John Doe"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #e5ddd0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#fafaf9',
+                  color: '#1f2937'
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <FiMail className="w-4 h-4" />
-                  Email
-                </div>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }} htmlFor="email">
+                Email
               </label>
               <input
                 id="email"
@@ -136,16 +232,28 @@ function SignupPage() {
                 onChange={handleInputChange}
                 placeholder="you@example.com"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #e5ddd0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#fafaf9',
+                  color: '#1f2937'
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <FiLock className="w-4 h-4" />
-                  Password
-                </div>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }} htmlFor="password">
+                Password
               </label>
               <input
                 id="password"
@@ -156,16 +264,28 @@ function SignupPage() {
                 placeholder="••••••••"
                 required
                 minLength="6"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #e5ddd0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#fafaf9',
+                  color: '#1f2937'
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <FiPhone className="w-4 h-4" />
-                  Phone (Optional)
-                </div>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }} htmlFor="phone">
+                Phone (Optional)
               </label>
               <input
                 id="phone"
@@ -174,12 +294,27 @@ function SignupPage() {
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="+254..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #e5ddd0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#fafaf9',
+                  color: '#1f2937'
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }} htmlFor="role">
                 Role
               </label>
               <select
@@ -187,7 +322,16 @@ function SignupPage() {
                 name="role"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #e5ddd0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#fafaf9',
+                  color: '#1f2937'
+                }}
               >
                 <option value="farm-worker">Farm Worker</option>
                 <option value="supervisor">Supervisor (requires code)</option>
@@ -196,11 +340,22 @@ function SignupPage() {
             </div>
 
             {requiresCode && (
-              <div className="form-group bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <label htmlFor="signupCode" className="block text-sm font-medium text-gray-700 mb-2">
+              <div style={{
+                backgroundColor: '#f9f7f3',
+                padding: '14px',
+                borderRadius: '6px',
+                border: '1px solid #e5ddd0'
+              }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  marginBottom: '8px',
+                  color: '#374151'
+                }} htmlFor="signupCode">
                   Signup Code (required for {formData.role})
                 </label>
-                <div className="flex gap-2">
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     id="signupCode"
                     type="text"
@@ -210,36 +365,72 @@ function SignupPage() {
                     placeholder="Enter signup code"
                     required={requiresCode}
                     disabled={codeVerified}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition disabled:bg-gray-100"
+                    style={{
+                      flex: 1,
+                      padding: '10px 12px',
+                      border: '1px solid #e5ddd0',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      backgroundColor: codeVerified ? '#f3f1ed' : '#fafaf9',
+                      color: '#1f2937'
+                    }}
                   />
                   <button
                     type="button"
                     onClick={handleVerifyCode}
                     disabled={!formData.signupCode || codeVerified || loading}
-                    className="bg-amber-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-800 transition disabled:opacity-50"
+                    style={{
+                      backgroundColor: codeVerified ? '#10b981' : '#b8652a',
+                      color: '#ffffff',
+                      padding: '10px 14px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: !formData.signupCode || codeVerified || loading ? 'not-allowed' : 'pointer',
+                      opacity: !formData.signupCode || codeVerified || loading ? 0.6 : 1,
+                      whiteSpace: 'nowrap'
+                    }}
                   >
-                    {codeVerified ? 'Verified' : 'Verify'}
+                    {codeVerified ? '✓ Verified' : 'Verify'}
                   </button>
                 </div>
                 {codeVerified && (
-                  <p className="text-green-600 text-sm mt-2">Code verified successfully</p>
+                  <p style={{ color: '#10b981', fontSize: '12px', marginTop: '8px' }}>
+                    Code verified successfully
+                  </p>
                 )}
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full bg-amber-700 text-white py-2 rounded-lg font-semibold hover:bg-amber-800 transition disabled:opacity-50"
               disabled={loading || (requiresCode && !codeVerified)}
+              style={{
+                backgroundColor: '#b8652a',
+                color: '#ffffff',
+                padding: '11px',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: loading || (requiresCode && !codeVerified) ? 'not-allowed' : 'pointer',
+                opacity: loading || (requiresCode && !codeVerified) ? 0.6 : 1,
+                marginTop: '6px'
+              }}
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <p style={{ color: '#6b7280', fontSize: '13px' }}>
               Already have an account?{' '}
-              <Link to="/login" className="text-amber-700 font-semibold hover:text-amber-800 transition">
+              <Link to="/login" style={{
+                color: '#b8652a',
+                fontWeight: '600',
+                textDecoration: 'none'
+              }}>
                 Sign In
               </Link>
             </p>

@@ -186,3 +186,19 @@ export const usersAPI = {
       method: "DELETE",
     }),
 };
+
+export default {
+  post: async (endpoint, body) => {
+    return apiCall(endpoint, { method: "POST", body });
+  },
+  get: (endpoint) => apiCall(endpoint),
+  put: (endpoint, body) => apiCall(endpoint, { method: "PUT", body }),
+  delete: (endpoint) => apiCall(endpoint, { method: "DELETE" }),
+  authAPI,
+  signupCodeAPI,
+  farmsAPI,
+  inventoryAPI,
+  productionAPI,
+  tasksAPI,
+  usersAPI,
+};

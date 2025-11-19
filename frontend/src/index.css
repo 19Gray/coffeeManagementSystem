@@ -2,9 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tailwind v4 Theme - Define before usage */
+@theme {
+  --color-coffee-dark: #1a1410;
+  --color-coffee-brown: #6B4423;
+  --color-coffee-light: #8B5A2B;
+  --color-coffee-gold: #D4A574;
+
+  --color-slate-bg: #0f172a;
+  --color-slate-card: #1e293b;
+  --color-slate-border: #334155;
+  --color-slate-text: #e2e8f0;
+  --color-slate-text-secondary: #94a3b8;
+}
+
+/* CSS Custom Properties for fallback */
+:root {
+  --coffee-dark: #1a1410;
+  --coffee-brown: #6B4423;
+  --coffee-light: #8B5A2B;
+  --coffee-gold: #D4A574;
+
+  --slate-bg: #0f172a;
+  --slate-card: #1e293b;
+  --slate-border: #334155;
+  --slate-text: #e2e8f0;
+  --slate-text-secondary: #94a3b8;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+}
+
 @layer base {
   body {
-    @apply bg-light text-gray-900 font-sans;
+    @apply bg-slate-900 text-slate-100 font-sans;
   }
 
   h1,
@@ -13,15 +46,15 @@
   h4,
   h5,
   h6 {
-    @apply font-semibold text-gray-900;
+    @apply font-semibold text-slate-100;
   }
 
   h1 {
-    @apply text-2xl;
+    @apply text-3xl;
   }
 
   h2 {
-    @apply text-xl;
+    @apply text-2xl;
   }
 
   h3 {
@@ -29,11 +62,16 @@
   }
 
   a {
-    @apply text-primary hover:text-secondary transition-colors;
+    @apply hover:opacity-80 transition-colors;
+    color: var(--coffee-light);
+  }
+
+  a:hover {
+    color: var(--coffee-gold);
   }
 
   button {
-    @apply font-sans cursor-pointer transition-all border-0 rounded-md font-medium;
+    @apply font-sans cursor-pointer transition-all border-0 rounded-lg font-medium;
   }
 
   button:disabled {
@@ -43,41 +81,148 @@
   input,
   select,
   textarea {
-    @apply font-sans text-base border border-gray-300 rounded-md p-3 w-full transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-opacity-10 focus:ring-primary;
+    @apply font-sans text-base bg-slate-800 border border-slate-700 rounded-lg p-3 w-full text-slate-100 placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-opacity-50;
+    border-color: var(--slate-border);
+    --tw-ring-color: var(--coffee-light);
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--coffee-light);
   }
 }
 
 @layer components {
+
+  /* Dashboard Cards */
+  .dashboard-card {
+    @apply bg-slate-800 rounded-xl border border-slate-700 p-6 hover:border-slate-600 transition-all hover:shadow-xl;
+  }
+
+  .kpi-card {
+    @apply dashboard-card;
+  }
+
+  .kpi-card-value {
+    @apply text-3xl font-bold;
+    color: var(--coffee-gold);
+  }
+
+  .kpi-card-label {
+    @apply text-sm font-medium text-slate-400 uppercase tracking-wider;
+  }
+
+  /* Chart Container */
+  .chart-container {
+    @apply dashboard-card;
+  }
+
+  .chart-title {
+    @apply text-lg font-semibold text-slate-100 mb-6;
+  }
+
+  /* Table Styling */
+  .table-wrapper {
+    @apply overflow-x-auto rounded-xl;
+  }
+
+  .table {
+    @apply w-full text-sm;
+  }
+
+  .table thead {
+    @apply bg-slate-700 border-b border-slate-600;
+  }
+
+  .table thead th {
+    @apply px-6 py-4 text-left font-semibold text-slate-300 uppercase tracking-wider;
+  }
+
+  .table tbody tr {
+    @apply border-b border-slate-700 hover:bg-slate-700/50 transition-colors;
+  }
+
+  .table tbody td {
+    @apply px-6 py-4 text-slate-300;
+  }
+
+  /* Buttons */
   .btn-primary {
-    @apply bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary active:scale-95 disabled:opacity-50 transition-all;
+    @apply text-white px-4 py-2 rounded-lg active:scale-95 disabled:opacity-50 transition-all;
+    background-color: var(--coffee-brown);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--coffee-light);
   }
 
   .btn-secondary {
-    @apply bg-gray-300 text-dark px-4 py-2 rounded-md hover:bg-gray-400 active:scale-95 disabled:opacity-50 transition-all;
+    @apply bg-slate-700 text-slate-100 px-4 py-2 rounded-lg hover:bg-slate-600 active:scale-95 disabled:opacity-50 transition-all;
   }
 
   .btn-danger {
-    @apply bg-danger text-white px-4 py-2 rounded-md hover:bg-red-600 active:scale-95 disabled:opacity-50 transition-all;
+    @apply text-white px-4 py-2 rounded-lg active:scale-95 disabled:opacity-50 transition-all;
+    background-color: var(--danger);
+  }
+
+  .btn-danger:hover {
+    background-color: rgb(220, 38, 38);
   }
 
   .btn-success {
-    @apply bg-success text-white px-4 py-2 rounded-md hover:bg-green-600 active:scale-95 disabled:opacity-50 transition-all;
+    @apply text-white px-4 py-2 rounded-lg active:scale-95 disabled:opacity-50 transition-all;
+    background-color: var(--success);
   }
 
+  .btn-success:hover {
+    background-color: rgb(5, 150, 105);
+  }
+
+  /* Status Badges */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-success {
+    @apply bg-green-500/20 text-green-400;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-500/20 text-yellow-400;
+  }
+
+  .badge-danger {
+    @apply bg-red-500/20 text-red-400;
+  }
+
+  .badge-info {
+    @apply bg-blue-500/20 text-blue-400;
+  }
+
+  /* Messages */
   .error-message {
-    @apply bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-md mb-4;
+    @apply bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4;
   }
 
   .success-message {
-    @apply bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded-md mb-4;
+    @apply bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg mb-4;
+  }
+
+  .warning-message {
+    @apply bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-4 py-3 rounded-lg mb-4;
+  }
+
+  .info-message {
+    @apply bg-blue-500/10 border border-blue-500/30 text-blue-400 px-4 py-3 rounded-lg mb-4;
   }
 
   .loading-spinner {
-    @apply flex items-center justify-center min-h-screen text-lg text-gray-600;
+    @apply flex items-center justify-center min-h-screen text-lg text-slate-400;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
+    @apply dashboard-card;
   }
 
   .form-group {
@@ -85,6 +230,29 @@
   }
 
   .form-group label {
-    @apply block text-sm font-medium text-gray-900 mb-1;
+    @apply block text-sm font-medium text-slate-300 mb-2;
+  }
+
+  /* Grid Layouts */
+  .grid-kpis {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
+  .grid-charts {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+  }
+
+  /* Header Styling */
+  .dashboard-header {
+    @apply mb-8;
+  }
+
+  .dashboard-header h1 {
+    @apply text-4xl font-bold mb-2;
+    color: var(--coffee-gold);
+  }
+
+  .dashboard-header p {
+    @apply text-slate-400;
   }
 }

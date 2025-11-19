@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react'
 import AuthContext from '../context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
-import { FiMail, FiLock } from 'react-icons/fi'
+import { showToast } from '../utils/toastConfig'
 
 function LoginPage() {
   const { login, setUser } = useContext(AuthContext)
@@ -18,9 +18,12 @@ function LoginPage() {
 
     try {
       await login(email, password)
+      showToast.success('Login successful!')
       navigate('/dashboard')
     } catch (err) {
-      setError(err.message || 'Login failed')
+      const errorMsg = err.message || 'Login failed'
+      setError(errorMsg)
+      showToast.error(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -35,32 +38,71 @@ function LoginPage() {
     }
     localStorage.setItem('user', JSON.stringify(guestUser))
     setUser(guestUser)
+    showToast.success('Guest access granted')
     navigate('/dashboard')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-amber-100">
-          <div className="text-center mb-8">
-            <img src="/great-rift-logo.png" alt="Great Rift" className="h-12 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-amber-900 mb-2">Great Rift Coffee</h1>
-            <p className="text-gray-600">Management System</p>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#f5ede0',
+      padding: '16px'
+    }}>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          padding: '40px 32px',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{
+              fontSize: '32px',
+              marginBottom: '16px',
+              fontWeight: 'bold',
+              color: '#b8a887'
+            }}>
+              ☕
+            </div>
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              marginBottom: '4px',
+              color: '#5c3d2e'
+            }}>
+              Great Rift Coffee
+            </h1>
+            <p style={{ color: '#8b7355', fontSize: '13px', fontWeight: '500' }}>Management System</p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <div style={{
+              backgroundColor: '#fee2e2',
+              color: '#991b1b',
+              padding: '12px 14px',
+              borderRadius: '6px',
+              marginBottom: '20px',
+              fontSize: '13px'
+            }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="form-group">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <FiMail className="w-4 h-4" />
-                  Email
-                </div>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151',
+                gap: '6px'
+              }} htmlFor="email">
+                <span>✉</span> Email
               </label>
               <input
                 id="email"
@@ -69,16 +111,30 @@ function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #e5ddd0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#fafaf9',
+                  color: '#1f2937'
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <FiLock className="w-4 h-4" />
-                  Password
-                </div>
+            <div>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151',
+                gap: '6px'
+              }} htmlFor="password">
+                <span>🔒</span> Password
               </label>
               <input
                 id="password"
@@ -87,37 +143,76 @@ function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #e5ddd0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#fafaf9',
+                  color: '#1f2937'
+                }}
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-amber-700 text-white py-2 rounded-lg font-semibold hover:bg-amber-800 transition disabled:opacity-50"
               disabled={loading}
+              style={{
+                backgroundColor: '#b8652a',
+                color: '#ffffff',
+                padding: '11px',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+                marginTop: '8px'
+              }}
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="flex items-center my-6">
-            <div className="flex-1 border-t border-gray-300"></div>
-            <span className="px-4 text-gray-500 text-sm">or</span>
-            <div className="flex-1 border-t border-gray-300"></div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            margin: '20px 0',
+            gap: '12px'
+          }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#e5ddd0' }}></div>
+            <span style={{ color: '#a0957d', fontSize: '12px', fontWeight: '500' }}>or</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#e5ddd0' }}></div>
           </div>
 
           <button
             onClick={handleGuestLogin}
             type="button"
-            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition"
+            style={{
+              width: '100%',
+              backgroundColor: '#f3f1ed',
+              color: '#374151',
+              padding: '11px',
+              border: '1px solid #e5ddd0',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
           >
             Continue as Guest
           </button>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div style={{ marginTop: '24px', textAlign: 'center' }}>
+            <p style={{ color: '#6b7280', fontSize: '13px' }}>
               Don't have an account?{' '}
-              <Link to="/signup" className="text-amber-700 font-semibold hover:text-amber-800 transition">
+              <Link to="/signup" style={{
+                color: '#b8652a',
+                fontWeight: '600',
+                textDecoration: 'none'
+              }}>
                 Sign Up
               </Link>
             </p>

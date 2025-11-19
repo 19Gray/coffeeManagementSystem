@@ -15,6 +15,12 @@ const farmSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Please provide farm area in hectares"],
     },
+    blocks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Block",
+      },
+    ],
     totalProduction: {
       type: Number,
       default: 0,
