@@ -65,7 +65,7 @@ export default function HomePage() {
         </div>
         <div>
           <img 
-            src="/coffee-farm-landscape-with-workers-and-plants.jpg" 
+            src="/coffee-beans.jpg" 
             alt="Coffee farm management"
             className="rounded-xl shadow-lg w-full h-80 object-cover"
           />
@@ -106,7 +106,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-8 items-center border-t border-gray-200">
         <div>
           <img 
-            src="/coffee-beans-harvesting-equipment.jpg" 
+            src="/coffee-harvest.jpg" 
             alt="Coffee harvesting"
             className="rounded-xl shadow-lg w-full h-96 object-cover"
           />
@@ -145,7 +145,7 @@ export default function HomePage() {
           </div>
           <div>
             <img 
-              src="/coffee-roasting-process-close-up.jpg" 
+              src="/coffee-pp.jpg" 
               alt="Coffee production"
               className="rounded-xl shadow-lg w-full h-96 object-cover"
             />

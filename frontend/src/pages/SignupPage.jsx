@@ -81,7 +81,7 @@ function SignupPage() {
       if (response.data && response.data.success) {
         showToast.success('Account created! Check your email to verify.')
         setShowVerificationMessage(true)
-        setTimeout(() => navigate('/login'), 3000)
+        setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`), 1500)
       } else {
         throw new Error(response.data?.message || 'Signup failed')
       }
@@ -126,7 +126,7 @@ function SignupPage() {
             <p style={{ color: '#6b7280', marginBottom: '16px', fontSize: '13px', lineHeight: '1.5' }}>
               We've sent a verification email to <strong>{formData.email}</strong>. Please check your email and click the verification link to activate your account.
             </p>
-            <p style={{ color: '#a0957d', fontSize: '12px' }}>Redirecting to login...</p>
+            <p style={{ color: '#a0957d', fontSize: '12px' }}>Redirecting to verification page...</p>
           </div>
         </div>
       </div>

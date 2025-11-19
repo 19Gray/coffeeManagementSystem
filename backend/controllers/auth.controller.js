@@ -20,7 +20,7 @@ const generateToken = (id) => {
 };
 
 export const register = asyncHandler(async (req, res, next) => {
-  const { name, email, password, role, phone, signupCode, codeId } = req.body;
+  const { name, email, password, role, phone, signupCode } = req.body;
 
   console.log("[v0] Register attempt with:", { name, email, role, phone });
 
@@ -28,10 +28,10 @@ export const register = asyncHandler(async (req, res, next) => {
     return next(new AppError("Please provide all required fields", 400));
   }
 
-  // Check if user already exists
+  // Check if user already exists (including pending verification)
   const userExists = await User.findOne({ email });
   if (userExists) {
-    return next(new AppError("Email already exists", 400));
+    return next(new AppError("Email already registered", 400));
   }
 
   // Validate role-based signup rules
@@ -52,24 +52,22 @@ export const register = asyncHandler(async (req, res, next) => {
       return next(new AppError("Invalid or expired signup code", 400));
     }
 
-    // Mark code as used
     code.isUsed = true;
-    code.usedBy = req.body.userId;
     await code.save();
-  } else if (role === "farm-worker") {
-    // Farm workers can signup without code
-  } else if (["ict-manager", "ceo"].includes(role)) {
-    return next(
-      new AppError("ICT Managers and CEOs cannot self-register", 403)
-    );
+  } else if (!["farm-worker"].includes(role)) {
+    if (["ict-manager", "ceo"].includes(role)) {
+      return next(
+        new AppError("ICT Managers and CEOs cannot self-register", 403)
+      );
+    }
   }
 
   const verificationToken = generateVerificationToken();
   const hashedToken = hashToken(verificationToken);
 
-  let user;
+  let signupData;
   try {
-    user = await User.create({
+    signupData = await User.create({
       name,
       email,
       password,
@@ -77,10 +75,11 @@ export const register = asyncHandler(async (req, res, next) => {
       phone: phone || "",
       verificationToken: hashedToken,
       verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      isVerified: false, // User is not verified yet
     });
-    console.log("[v0] User created successfully:", user._id);
+    console.log("[v0] Signup data stored for:", email);
   } catch (createError) {
-    console.error("[v0] User creation failed:", createError.message);
+    console.error("[v0] Signup data storage failed:", createError.message);
     return next(
       new AppError(`Registration failed: ${createError.message}`, 400)
     );
@@ -88,35 +87,22 @@ export const register = asyncHandler(async (req, res, next) => {
 
   // Send verification email
   try {
-    await sendVerificationEmail(user.email, verificationToken);
-    console.log("[v0] Verification email sent to:", user.email);
+    await sendVerificationEmail(email, verificationToken);
+    console.log("[v0] Verification email sent to:", email);
   } catch (error) {
     console.error("[v0] Failed to send verification email:", error.message);
-    // Don't fail registration if email fails, but log it
-  }
-
-  // Update code with usedBy
-  if (signupCode) {
-    await SignupCode.updateOne(
-      { code: signupCode.toUpperCase() },
-      { usedBy: user._id }
+    // Delete the signup record if email fails
+    await User.deleteOne({ _id: signupData._id });
+    return next(
+      new AppError("Failed to send verification email. Please try again.", 500)
     );
   }
 
-  const token = generateToken(user._id);
-
   res.status(201).json({
     success: true,
-    token,
-    message:
-      "Registration successful. Please check your email to verify your account.",
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isVerified: user.isVerified,
-    },
+    message: "Signup successful! Check your email to verify your account.",
+    email: email,
+    verificationSent: true,
   });
 });
 
@@ -142,9 +128,14 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
   user.verificationTokenExpiry = null;
   await user.save();
 
+  console.log("[v0] User verified successfully:", user.email);
+
+  const authToken = generateToken(user._id);
+
   res.status(200).json({
     success: true,
-    message: "Email verified successfully",
+    message: "Email verified successfully! You can now login.",
+    token: authToken,
     user: {
       id: user._id,
       name: user.name,

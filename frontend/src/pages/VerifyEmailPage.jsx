@@ -7,6 +7,7 @@ function VerifyEmailPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('verifying')
+  const email = searchParams.get('email')
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -49,23 +50,86 @@ function VerifyEmailPage() {
   }, [searchParams, navigate])
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="dashboard-card text-center">
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#f5ede0',
+      padding: '16px'
+    }}>
+      <div style={{ maxWidth: '400px', width: '100%' }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          padding: '40px 32px',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)',
+          textAlign: 'center'
+        }}>
           {loading && (
             <>
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-coffee-gold mx-auto mb-4"></div>
-              <h2 className="text-2xl font-bold text-coffee-gold mb-2">Verifying Email</h2>
-              <p className="text-slate-400">Please wait while we verify your email address...</p>
+              <div style={{
+                display: 'inline-block',
+                width: '48px',
+                height: '48px',
+                border: '4px solid #e5ddd0',
+                borderTop: '4px solid #b8652a',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                marginBottom: '24px'
+              }}></div>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                marginBottom: '8px',
+                color: '#5c3d2e'
+              }}>
+                Verifying Email
+              </h2>
+              <p style={{ color: '#6b7280', fontSize: '13px' }}>
+                Please wait while we verify your email address...
+              </p>
             </>
           )}
 
           {!loading && status === 'success' && (
             <>
-              <div className="text-6xl mb-4">✓</div>
-              <h2 className="text-2xl font-bold text-success mb-2">Email Verified!</h2>
-              <p className="text-slate-400 mb-6">Your email has been verified successfully. Redirecting to login...</p>
-              <button className="btn-primary w-full" onClick={() => navigate('/login')}>
+              <div style={{
+                fontSize: '56px',
+                marginBottom: '16px',
+                color: '#10b981'
+              }}>
+                ✓
+              </div>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                marginBottom: '8px',
+                color: '#5c3d2e'
+              }}>
+                Email Verified!
+              </h2>
+              <p style={{
+                color: '#6b7280',
+                marginBottom: '24px',
+                fontSize: '13px'
+              }}>
+                Your email has been verified successfully. Redirecting to login...
+              </p>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  backgroundColor: '#b8652a',
+                  color: '#ffffff',
+                  padding: '11px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  width: '100%'
+                }}
+              >
                 Go to Login
               </button>
             </>
@@ -73,16 +137,54 @@ function VerifyEmailPage() {
 
           {!loading && status === 'error' && (
             <>
-              <div className="text-6xl mb-4">✗</div>
-              <h2 className="text-2xl font-bold text-danger mb-2">Verification Failed</h2>
-              <p className="text-slate-400 mb-6">The verification link may be invalid or expired.</p>
-              <button className="btn-primary w-full" onClick={() => navigate('/login')}>
-                Back to Login
+              <div style={{
+                fontSize: '56px',
+                marginBottom: '16px',
+                color: '#ef4444'
+              }}>
+                ✕
+              </div>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                marginBottom: '8px',
+                color: '#5c3d2e'
+              }}>
+                Verification Failed
+              </h2>
+              <p style={{
+                color: '#6b7280',
+                marginBottom: '24px',
+                fontSize: '13px'
+              }}>
+                The verification link may be invalid or expired.
+              </p>
+              <button
+                onClick={() => navigate('/signup')}
+                style={{
+                  backgroundColor: '#b8652a',
+                  color: '#ffffff',
+                  padding: '11px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  width: '100%'
+                }}
+              >
+                Back to Signup
               </button>
             </>
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
