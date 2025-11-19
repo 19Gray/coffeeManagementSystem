@@ -1,10 +1,25 @@
 import nodemailer from "nodemailer";
 
+const emailHost = process.env.EMAIL_HOST;
+const emailPort = process.env.EMAIL_PORT;
+const emailUser = process.env.EMAIL_USER;
+const emailPassword = process.env.EMAIL_PASSWORD;
+
+console.log("[Email Service] Configuration check:");
+console.log("[Email Service] HOST:", emailHost ? "✓ Set" : "✗ Missing");
+console.log("[Email Service] PORT:", emailPort ? "✓ Set" : "✗ Missing");
+console.log("[Email Service] USER:", emailUser ? "✓ Set" : "✗ Missing");
+console.log("[Email Service] PASSWORD:", emailPassword ? "✓ Set" : "✗ Missing");
+
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || "gmail",
+  host: emailHost,
+  port: parseInt(emailPort) || 587,
+  secure: emailHost?.includes("gmail")
+    ? false
+    : process.env.EMAIL_SECURE === "true",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
+    user: emailUser,
+    pass: emailPassword,
   },
 });
 
@@ -23,13 +38,15 @@ export const sendVerificationEmail = async (email, verificationToken) => {
   }/verify-email?token=${verificationToken}`;
 
   const mailOptions = {
-    from: `"Coffee Management System" <${process.env.EMAIL_USER}>`,
+    from: `"${process.env.EMAIL_FROM_NAME || "Coffee Management System"}" <${
+      process.env.EMAIL_FROM || process.env.EMAIL_USER
+    }>`,
     to: email,
-    subject: "Verify Your Email - Coffee Management System",
+    subject: "Verify Your Email - Great Rift Coffee Management System",
     html: `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5ede0;">
         <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h1 style="color: #6B4423; text-align: center; margin-bottom: 20px;">Welcome to Coffee Management System</h1>
+          <h1 style="color: #B8652A; text-align: center; margin-bottom: 20px;">Welcome to Great Rift Coffee</h1>
           
           <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
             Hello,
@@ -40,14 +57,14 @@ export const sendVerificationEmail = async (email, verificationToken) => {
           </p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" style="background-color: #8B5A2B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            <a href="${verificationUrl}" style="background-color: #B8652A; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
               Verify Email
             </a>
           </div>
           
           <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
             Or copy and paste this link: <br/>
-            <a href="${verificationUrl}" style="color: #8B5A2B; word-break: break-all;">${verificationUrl}</a>
+            <a href="${verificationUrl}" style="color: #B8652A; word-break: break-all;">${verificationUrl}</a>
           </p>
           
           <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
@@ -80,20 +97,22 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
   }/reset-password?token=${resetToken}`;
 
   const mailOptions = {
-    from: `"Coffee Management System" <${process.env.EMAIL_USER}>`,
+    from: `"${process.env.EMAIL_FROM_NAME || "Coffee Management System"}" <${
+      process.env.EMAIL_FROM || process.env.EMAIL_USER
+    }>`,
     to: email,
-    subject: "Reset Your Password - Coffee Management System",
+    subject: "Reset Your Password - Great Rift Coffee Management System",
     html: `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5ede0;">
         <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h1 style="color: #6B4423; text-align: center; margin-bottom: 20px;">Password Reset Request</h1>
+          <h1 style="color: #B8652A; text-align: center; margin-bottom: 20px;">Password Reset Request</h1>
           
           <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
             You requested to reset your password. Click the link below to set a new password:
           </p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" style="background-color: #8B5A2B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            <a href="${resetUrl}" style="background-color: #B8652A; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
               Reset Password
             </a>
           </div>

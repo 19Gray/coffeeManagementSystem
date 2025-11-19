@@ -39,10 +39,12 @@ function SignupPage() {
         role: formData.role,
       })
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         setCodeVerified(true)
         setError('')
         showToast.success('Signup code verified successfully!')
+      } else {
+        throw new Error(response.data?.message || 'Code verification failed')
       }
     } catch (err) {
       const errorMsg = err.message || 'Invalid signup code'
@@ -76,10 +78,12 @@ function SignupPage() {
         signupCode: formData.signupCode,
       })
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         showToast.success('Account created! Check your email to verify.')
         setShowVerificationMessage(true)
         setTimeout(() => navigate('/login'), 3000)
+      } else {
+        throw new Error(response.data?.message || 'Signup failed')
       }
     } catch (err) {
       const errorMsg = err.message || 'Signup failed'
@@ -148,14 +152,11 @@ function SignupPage() {
           boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-            <div style={{
-              fontSize: '32px',
-              marginBottom: '12px',
-              fontWeight: 'bold',
-              color: '#b8a887'
-            }}>
-              ☕
-            </div>
+            <img 
+              src="/great-rift-logo.png" 
+              alt="Great Rift Coffee" 
+              style={{ height: '48px', width: 'auto', marginBottom: '12px', objectFit: 'contain' }}
+            />
             <h1 style={{
               fontSize: '22px',
               fontWeight: '600',

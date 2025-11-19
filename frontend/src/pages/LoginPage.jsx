@@ -59,14 +59,11 @@ function LoginPage() {
           boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <div style={{
-              fontSize: '32px',
-              marginBottom: '16px',
-              fontWeight: 'bold',
-              color: '#b8a887'
-            }}>
-              ☕
-            </div>
+            <img 
+              src="/great-rift-logo.png" 
+              alt="Great Rift Coffee" 
+              style={{ height: '48px', width: 'auto', marginBottom: '16px', objectFit: 'contain' }}
+            />
             <h1 style={{
               fontSize: '24px',
               fontWeight: '600',

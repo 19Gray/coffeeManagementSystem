@@ -22,6 +22,8 @@ const generateToken = (id) => {
 export const register = asyncHandler(async (req, res, next) => {
   const { name, email, password, role, phone, signupCode, codeId } = req.body;
 
+  console.log("[v0] Register attempt with:", { name, email, role, phone });
+
   if (!name || !email || !password) {
     return next(new AppError("Please provide all required fields", 400));
   }
@@ -65,21 +67,31 @@ export const register = asyncHandler(async (req, res, next) => {
   const verificationToken = generateVerificationToken();
   const hashedToken = hashToken(verificationToken);
 
-  const user = await User.create({
-    name,
-    email,
-    password,
-    role: role || "farm-worker",
-    phone,
-    verificationToken: hashedToken,
-    verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-  });
+  let user;
+  try {
+    user = await User.create({
+      name,
+      email,
+      password,
+      role: role || "farm-worker",
+      phone: phone || "",
+      verificationToken: hashedToken,
+      verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+    console.log("[v0] User created successfully:", user._id);
+  } catch (createError) {
+    console.error("[v0] User creation failed:", createError.message);
+    return next(
+      new AppError(`Registration failed: ${createError.message}`, 400)
+    );
+  }
 
   // Send verification email
   try {
     await sendVerificationEmail(user.email, verificationToken);
+    console.log("[v0] Verification email sent to:", user.email);
   } catch (error) {
-    console.error("Failed to send verification email:", error);
+    console.error("[v0] Failed to send verification email:", error.message);
     // Don't fail registration if email fails, but log it
   }
 
