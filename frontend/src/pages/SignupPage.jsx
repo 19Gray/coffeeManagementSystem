@@ -1,25 +1,51 @@
 "use client"
 
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, useLocation } from "react-router-dom"
 import api from "../services/api"
 import { showToast } from "../utils/toastConfig"
 
 function SignupPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const inviteToken = new URLSearchParams(location.search).get("invite")
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     phone: "",
-    role: "farm-worker",
+    role: inviteToken ? "" : "farm-worker",
     signupCode: "",
+    organizationName: "",
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [codeVerified, setCodeVerified] = useState(false)
   const [showVerificationMessage, setShowVerificationMessage] = useState(false)
-  const [autoVerified, setAutoVerified] = useState(false)
+  const [isCreatingOrg, setIsCreatingOrg] = useState(!inviteToken)
+
+  useState(() => {
+    if (inviteToken) {
+      loadInviteDetails()
+    }
+  }, [inviteToken])
+
+  const loadInviteDetails = async () => {
+    try {
+      const response = await api.get(`/invites/${inviteToken}`)
+      if (response.data) {
+        setFormData((prev) => ({
+          ...prev,
+          email: response.data.email,
+          role: response.data.role,
+        }))
+        setIsCreatingOrg(false)
+      }
+    } catch (err) {
+      showToast.error("Invalid or expired invite link")
+    }
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -64,7 +90,14 @@ function SignupPage() {
     setError("")
     setLoading(true)
 
-    if (["agronomist", "supervisor"].includes(formData.role) && !codeVerified) {
+    if (formData.role === "ceo" && !formData.organizationName) {
+      setError("Organization name is required for CEO role")
+      showToast.error("Organization name is required")
+      setLoading(false)
+      return
+    }
+
+    if (["agronomist", "supervisor"].includes(formData.role) && !codeVerified && !inviteToken) {
       setError("Please verify your signup code first")
       showToast.error("Please verify your signup code first")
       setLoading(false)
@@ -72,21 +105,38 @@ function SignupPage() {
     }
 
     try {
-      const response = await api.post("/auth/register", {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        role: formData.role,
-        signupCode: formData.signupCode,
-      })
+      if (inviteToken) {
+        const response = await api.post("/invites/accept", {
+          token: inviteToken,
+          name: formData.name,
+          password: formData.password,
+          phone: formData.phone,
+        })
 
-      if (response.data && response.data.success) {
-        showToast.success("Account created! Check your email for verification code.")
-        setShowVerificationMessage(true)
-        setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`), 1500)
+        if (response.data && response.data.success) {
+          showToast.success("Account created! Check your email for verification code.")
+          setShowVerificationMessage(true)
+          setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`), 1500)
+        }
       } else {
-        throw new Error(response.data?.message || "Signup failed")
+        // Regular signup
+        const response = await api.post("/auth/register", {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          role: formData.role,
+          signupCode: formData.signupCode,
+          organizationName: formData.organizationName,
+        })
+
+        if (response.data && response.data.success) {
+          showToast.success("Account created! Check your email for verification code.")
+          setShowVerificationMessage(true)
+          setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`), 1500)
+        } else {
+          throw new Error(response.data?.message || "Signup failed")
+        }
       }
     } catch (err) {
       const errorMsg = err.message || "Signup failed"
@@ -97,7 +147,7 @@ function SignupPage() {
     }
   }
 
-  const requiresCode = ["agronomist", "supervisor"].includes(formData.role)
+  const requiresCode = ["agronomist", "supervisor"].includes(formData.role) && !inviteToken
 
   if (showVerificationMessage) {
     return (
@@ -121,7 +171,7 @@ function SignupPage() {
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: "48px", marginBottom: "16px" }}>✓</div>
+            <div style={{ fontSize: "48px", marginBottom: "16px", color: "#2e7d32" }}>✓</div>
             <h1
               style={{
                 fontSize: "22px",
@@ -177,9 +227,11 @@ function SignupPage() {
                 color: "#2e7d32",
               }}
             >
-              Create Account
+              {inviteToken ? "Accept Invitation" : "Create Account"}
             </h1>
-            <p style={{ color: "#558b5a", fontSize: "13px", fontWeight: "500" }}>Join Great Rift Coffee Management</p>
+            <p style={{ color: "#558b5a", fontSize: "13px", fontWeight: "500" }}>
+              {inviteToken ? "Join your organization" : "Join Great Rift Coffee Management"}
+            </p>
           </div>
 
           {error && (
@@ -253,6 +305,7 @@ function SignupPage() {
                 onChange={handleInputChange}
                 placeholder="you@example.com"
                 required
+                disabled={!!inviteToken}
                 style={{
                   width: "100%",
                   padding: "10px 12px",
@@ -260,7 +313,7 @@ function SignupPage() {
                   borderRadius: "6px",
                   fontSize: "13px",
                   boxSizing: "border-box",
-                  backgroundColor: "#f1f8f4",
+                  backgroundColor: inviteToken ? "#e8f5e9" : "#f1f8f4",
                   color: "#1f2937",
                 }}
               />
@@ -334,40 +387,81 @@ function SignupPage() {
               />
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: "500",
-                  marginBottom: "6px",
-                  color: "#374151",
-                }}
-                htmlFor="role"
-              >
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "1px solid #c8e6c9",
-                  borderRadius: "6px",
-                  fontSize: "13px",
-                  boxSizing: "border-box",
-                  backgroundColor: "#f1f8f4",
-                  color: "#1f2937",
-                }}
-              >
-                <option value="farm-worker">Farm Worker</option>
-                <option value="supervisor">Supervisor (requires code)</option>
-                <option value="agronomist">Agronomist (requires code)</option>
-              </select>
-            </div>
+            {!inviteToken && (
+              <>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: "500",
+                      marginBottom: "6px",
+                      color: "#374151",
+                    }}
+                    htmlFor="role"
+                  >
+                    Role
+                  </label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #c8e6c9",
+                      borderRadius: "6px",
+                      fontSize: "13px",
+                      boxSizing: "border-box",
+                      backgroundColor: "#f1f8f4",
+                      color: "#1f2937",
+                    }}
+                  >
+                    <option value="farm-worker">Farm Worker</option>
+                    <option value="supervisor">Supervisor (requires code)</option>
+                    <option value="agronomist">Agronomist (requires code)</option>
+                    <option value="ceo">CEO / Organization Owner</option>
+                  </select>
+                </div>
+
+                {formData.role === "ceo" && (
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: "500",
+                        marginBottom: "6px",
+                        color: "#374151",
+                      }}
+                      htmlFor="organizationName"
+                    >
+                      Organization Name
+                    </label>
+                    <input
+                      id="organizationName"
+                      type="text"
+                      name="organizationName"
+                      value={formData.organizationName}
+                      onChange={handleInputChange}
+                      placeholder="Your Coffee Farm Organization"
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        border: "1px solid #c8e6c9",
+                        borderRadius: "6px",
+                        fontSize: "13px",
+                        boxSizing: "border-box",
+                        backgroundColor: "#f1f8f4",
+                        color: "#1f2937",
+                      }}
+                    />
+                  </div>
+                )}
+              </>
+            )}
 
             {requiresCode && (
               <div
@@ -452,25 +546,27 @@ function SignupPage() {
                 marginTop: "6px",
               }}
             >
-              {loading ? "Creating Account..." : "Create Account"}
+              {loading ? "Creating Account..." : inviteToken ? "Accept Invitation" : "Create Account"}
             </button>
           </form>
 
-          <div style={{ marginTop: "20px", textAlign: "center" }}>
-            <p style={{ color: "#6b7280", fontSize: "13px" }}>
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                style={{
-                  color: "#2e7d32",
-                  fontWeight: "600",
-                  textDecoration: "none",
-                }}
-              >
-                Sign In
-              </Link>
-            </p>
-          </div>
+          {!inviteToken && (
+            <div style={{ marginTop: "20px", textAlign: "center" }}>
+              <p style={{ color: "#6b7280", fontSize: "13px" }}>
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  style={{
+                    color: "#2e7d32",
+                    fontWeight: "600",
+                    textDecoration: "none",
+                  }}
+                >
+                  Sign In
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

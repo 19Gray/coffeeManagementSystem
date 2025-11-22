@@ -70,6 +70,14 @@ export default function HomePage() {
             </li>
             <li>
               <button
+                className="text-[#2e7d32] hover:text-[#1b5e20] transition font-medium"
+                onClick={() => navigate("/signup")}
+              >
+                Sign Up
+              </button>
+            </li>
+            <li>
+              <button
                 className="bg-[#2e7d32] text-white px-4 py-2 rounded-lg hover:bg-[#1b5e20] transition font-medium flex items-center gap-2"
                 onClick={() => navigate("/login")}
               >
@@ -235,12 +243,20 @@ export default function HomePage() {
           <p className="text-lg mb-6 opacity-90">
             Join farmers already using Great Rift Coffee for improved productivity
           </p>
-          <button
-            className="bg-white text-[#2e7d32] px-8 py-3 rounded-lg hover:bg-gray-100 transition text-lg font-semibold inline-flex items-center gap-2"
-            onClick={() => navigate("/login")}
-          >
-            Start Free Trial <FiArrowRight size={20} />
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button
+              className="bg-white text-[#2e7d32] px-8 py-3 rounded-lg hover:bg-gray-100 transition text-lg font-semibold inline-flex items-center gap-2"
+              onClick={() => navigate("/signup")}
+            >
+              Get Started Free <FiArrowRight size={20} />
+            </button>
+            <button
+              className="border-2 border-white text-white px-8 py-3 rounded-lg hover:bg-white hover:text-[#2e7d32] transition text-lg font-semibold inline-flex items-center gap-2"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </button>
+          </div>
         </div>
       </section>
 

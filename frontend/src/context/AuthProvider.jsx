@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react"
 import AuthContext from "./AuthContext"
-import { authAPI } from "../services/api"
+import { authAPI, organizationAPI } from "../services/api"
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [currentOrganization, setCurrentOrganization] = useState(null)
+  const [organizations, setOrganizations] = useState([])
 
   // Initialize user from localStorage on mount
   useEffect(() => {
@@ -15,11 +17,16 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem("authToken")
         const userData = localStorage.getItem("user")
+        const orgData = localStorage.getItem("currentOrganization")
 
         if (token && userData) {
           try {
             const parsedUser = JSON.parse(userData)
             setUser(parsedUser)
+
+            if (orgData) {
+              setCurrentOrganization(JSON.parse(orgData))
+            }
 
             // Optional: Verify token is still valid by fetching profile
             try {
@@ -28,6 +35,13 @@ export const AuthProvider = ({ children }) => {
                 setUser(profileData.data)
                 localStorage.setItem("user", JSON.stringify(profileData.data))
               }
+
+              if (parsedUser.role !== "farm_worker") {
+                const orgsData = await organizationAPI.getAll()
+                if (orgsData.data) {
+                  setOrganizations(orgsData.data)
+                }
+              }
             } catch (profileError) {
               console.warn("Profile fetch failed, using cached user data", profileError)
             }
@@ -35,6 +49,7 @@ export const AuthProvider = ({ children }) => {
             console.error("Failed to parse user data", parseError)
             localStorage.removeItem("authToken")
             localStorage.removeItem("user")
+            localStorage.removeItem("currentOrganization")
           }
         }
       } finally {
@@ -45,13 +60,16 @@ export const AuthProvider = ({ children }) => {
     initializeAuth()
   }, [])
 
-  // Login function
   const login = async (email, password) => {
     try {
       setError(null)
-      console.log("[v0] Calling login API")
+      setLoading(true)
+
       const response = await authAPI.login(email, password)
-      console.log("[v0] Login response:", response)
+
+      if (!response.success || !response.user || !response.token) {
+        throw new Error("Invalid response format from server")
+      }
 
       const userData = response.user
 
@@ -59,13 +77,26 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData))
 
       setUser(userData)
-      console.log("[v0] User state set:", userData)
 
+      // Load organizations if not a farm worker
+      if (userData.role !== "farm_worker" && userData.organizations?.length > 0) {
+        const orgsData = await organizationAPI.getAll()
+        if (orgsData.data) {
+          setOrganizations(orgsData.data)
+          // Set first organization as current
+          const firstOrg = orgsData.data[0]
+          setCurrentOrganization(firstOrg)
+          localStorage.setItem("currentOrganization", JSON.stringify(firstOrg))
+        }
+      }
+
+      setLoading(false)
       return userData
     } catch (err) {
+      setLoading(false)
       const errorMessage = err.message || "Login failed"
       setError(errorMessage)
-      console.error("[v0] Login error in AuthProvider:", errorMessage)
+      console.error("Login error in AuthProvider:", errorMessage, err)
       throw err
     }
   }
@@ -89,12 +120,15 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // Logout function
   const logout = () => {
     localStorage.removeItem("authToken")
     localStorage.removeItem("user")
+    localStorage.removeItem("currentOrganization")
     setUser(null)
+    setCurrentOrganization(null)
+    setOrganizations([])
     setError(null)
+    setLoading(false)
   }
 
   // Update profile function
@@ -115,6 +149,11 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const switchOrganization = (organization) => {
+    setCurrentOrganization(organization)
+    localStorage.setItem("currentOrganization", JSON.stringify(organization))
+  }
+
   const value = {
     user,
     setUser,
@@ -125,6 +164,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     isAuthenticated: !!user && !!localStorage.getItem("authToken"),
+    currentOrganization,
+    organizations,
+    switchOrganization,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

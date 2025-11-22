@@ -196,6 +196,89 @@ export const usersAPI = {
     }),
 };
 
+// Organization APIs
+export const organizationAPI = {
+  create: (data) =>
+    apiCall("/organizations", {
+      method: "POST",
+      body: data,
+    }),
+  getAll: () => apiCall("/organizations"),
+  getById: (id) => apiCall(`/organizations/${id}`),
+  update: (id, data) =>
+    apiCall(`/organizations/${id}`, {
+      method: "PUT",
+      body: data,
+    }),
+  updateStatus: (id, status) =>
+    apiCall(`/organizations/${id}/status`, {
+      method: "PUT",
+      body: { status },
+    }),
+  getMembers: (id) => apiCall(`/organizations/${id}/members`),
+  removeMember: (orgId, userId) =>
+    apiCall(`/organizations/${orgId}/members/${userId}`, {
+      method: "DELETE",
+    }),
+};
+
+// Invite APIs
+export const inviteAPI = {
+  create: (data) =>
+    apiCall("/invites", {
+      method: "POST",
+      body: data,
+    }),
+  getAll: () => apiCall("/invites"),
+  getByOrganization: (orgId) => apiCall(`/invites/organization/${orgId}`),
+  accept: (token) =>
+    apiCall("/invites/accept", {
+      method: "POST",
+      body: { token },
+    }),
+  resend: (inviteId) =>
+    apiCall(`/invites/${inviteId}/resend`, {
+      method: "POST",
+    }),
+  revoke: (inviteId) =>
+    apiCall(`/invites/${inviteId}`, {
+      method: "DELETE",
+    }),
+};
+
+// Worker APIs
+export const workerAPI = {
+  create: (data) =>
+    apiCall("/workers", {
+      method: "POST",
+      body: data,
+    }),
+  getAll: () => apiCall("/workers"),
+  getById: (id) => apiCall(`/workers/${id}`),
+  update: (id, data) =>
+    apiCall(`/workers/${id}`, {
+      method: "PUT",
+      body: data,
+    }),
+  updateStatus: (id, status) =>
+    apiCall(`/workers/${id}/status`, {
+      method: "PUT",
+      body: { status },
+    }),
+  assignTask: (id, taskId) =>
+    apiCall(`/workers/${id}/assign-task`, {
+      method: "POST",
+      body: { taskId },
+    }),
+};
+
+// Audit Log APIs
+export const auditLogAPI = {
+  getAll: () => apiCall("/audit-logs"),
+  getByOrganization: (orgId) => apiCall(`/audit-logs/organization/${orgId}`),
+  getByUser: (userId) => apiCall(`/audit-logs/user/${userId}`),
+};
+
 export default {
   post: async (endpoint, body) => {
     return apiCall(endpoint, { method: "POST", body });
@@ -210,4 +293,8 @@ export default {
   productionAPI,
   tasksAPI,
   usersAPI,
+  organizationAPI,
+  inviteAPI,
+  workerAPI,
+  auditLogAPI,
 };

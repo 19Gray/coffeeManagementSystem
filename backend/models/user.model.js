@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
       select: false,
     },
+    organization: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+    },
     role: {
       type: String,
       enum: [
@@ -36,6 +41,11 @@ const userSchema = new mongoose.Schema(
         "guest",
       ],
       default: "guest",
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive", "pending_invite"],
+      default: "active",
     },
     isVerified: {
       type: Boolean,
@@ -60,6 +70,13 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       default: "",
+    },
+    profileImage: {
+      type: String,
+      default: "",
+    },
+    lastLogin: {
+      type: Date,
     },
     createdAt: {
       type: Date,

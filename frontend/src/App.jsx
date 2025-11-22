@@ -1,15 +1,20 @@
-import { useState, useEffect, useContext } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import AuthProvider from './context/AuthProvider'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
-import HomePage from './pages/HomePage'
-import DashboardLayout from './layouts/DashboardLayout'
-import AuthContext from './context/AuthContext'
-import ToastProvider from './components/ToastProvider'
-import VerifyEmailPage from './pages/VerifyEmailPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
+"use client"
+
+import { useContext } from "react"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import AuthProvider from "./context/AuthProvider"
+import LoginPage from "./pages/LoginPage"
+import SignupPage from "./pages/SignupPage"
+import HomePage from "./pages/HomePage"
+import DashboardLayout from "./layouts/DashboardLayout"
+import AuthContext from "./context/AuthContext"
+import ToastProvider from "./components/ToastProvider"
+import VerifyEmailPage from "./pages/VerifyEmailPage"
+import ResetPasswordPage from "./pages/ResetPasswordPage"
+import ForgotPasswordPage from "./pages/ForgotPasswordPage"
+import CreateOrganizationPage from "./pages/CreateOrganizationPage"
+import InviteAcceptPage from "./pages/InviteAcceptPage"
+import OrganizationManagementPage from "./pages/OrganizationManagementPage"
 
 function AppContent() {
   const { user, loading } = useContext(AuthContext)
@@ -33,6 +38,9 @@ function AppContent() {
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/create-organization" element={user ? <CreateOrganizationPage /> : <Navigate to="/login" />} />
+      <Route path="/invite/accept" element={<InviteAcceptPage />} />
+      <Route path="/organization/manage" element={user ? <OrganizationManagementPage /> : <Navigate to="/login" />} />
       <Route path="/dashboard/*" element={user ? <DashboardLayout /> : <Navigate to="/login" />} />
     </Routes>
   )

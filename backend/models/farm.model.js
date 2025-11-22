@@ -7,6 +7,11 @@ const farmSchema = new mongoose.Schema(
       required: [true, "Please provide a farm name"],
       trim: true,
     },
+    organization: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+    },
     location: {
       type: String,
       required: [true, "Please provide a location"],
@@ -33,14 +38,6 @@ const farmSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive", "maintenance"],
       default: "active",
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
     },
   },
   { timestamps: true }

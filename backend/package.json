@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "create-superuser": "node scripts/createSuperuser.js"
   },
   "keywords": [],
   "author": "",
@@ -14,11 +15,13 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.4",
-    "nodemailer": "^6.9.7"
+    "nodemailer": "^6.9.7",
+    "readline": "^1.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

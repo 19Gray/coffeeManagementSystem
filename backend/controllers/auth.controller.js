@@ -86,7 +86,7 @@ export const register = asyncHandler(async (req, res, next) => {
       role: role || "farm-worker",
       phone: phone || "",
       verificationOTP: hashedOTP,
-      verificationTokenExpiry: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+      verificationTokenExpiry: new Date(Date.now() + 15 * 60 * 1000),
       isVerified: false,
     });
     console.log("[v0] Signup data stored for:", email);
@@ -128,7 +128,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
     email: email.toLowerCase(),
     verificationOTP: hashedOTP,
     verificationTokenExpiry: { $gt: Date.now() },
-  });
+  }).populate("organization", "name");
 
   if (!user) {
     return next(new AppError("Invalid or expired OTP", 400));
@@ -137,6 +137,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
   user.isVerified = true;
   user.verificationOTP = null;
   user.verificationTokenExpiry = null;
+  user.lastLogin = new Date();
   await user.save();
 
   console.log("[v0] User verified successfully:", user.email);
@@ -145,7 +146,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Email verified successfully! You can now login.",
+    message: "Email verified successfully!",
     token: authToken,
     user: {
       id: user._id,
@@ -153,6 +154,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
       email: user.email,
       role: user.role,
       isVerified: user.isVerified,
+      organization: user.organization ? user.organization.name : null,
     },
   });
 });
@@ -200,29 +202,56 @@ export const resendOTP = asyncHandler(async (req, res, next) => {
 export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
+  console.log("[v0] Login attempt for:", email);
+
   if (!email || !password) {
     return next(new AppError("Please provide email and password", 400));
   }
 
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email })
+    .select("+password")
+    .populate("organization", "name status");
 
   if (!user) {
+    console.log("[v0] User not found:", email);
     return next(new AppError("Invalid credentials", 401));
   }
 
   const isMatch = await user.matchPassword(password);
 
   if (!isMatch) {
+    console.log("[v0] Password mismatch for:", email);
     return next(new AppError("Invalid credentials", 401));
   }
 
   if (!user.isVerified) {
+    console.log("[v0] User not verified:", email);
     return next(
       new AppError("Please verify your email before logging in", 403)
     );
   }
 
+  if (user.status === "inactive") {
+    return next(
+      new AppError(
+        "Your account has been deactivated. Please contact support.",
+        403
+      )
+    );
+  }
+
+  if (user.organization && user.organization.status !== "active") {
+    return next(
+      new AppError("Your organization account is currently suspended.", 403)
+    );
+  }
+
+  user.lastLogin = new Date();
+  await user.save();
+
   const token = generateToken(user._id);
+
+  console.log("[v0] Login successful for:", email, "Role:", user.role);
 
   res.status(200).json({
     success: true,
@@ -233,6 +262,8 @@ export const login = asyncHandler(async (req, res, next) => {
       email: user.email,
       role: user.role,
       isVerified: user.isVerified,
+      organization: user.organization ? user.organization.name : null,
+      organizationId: user.organization ? user.organization._id : null,
     },
   });
 });

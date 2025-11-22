@@ -29,9 +29,12 @@ function LoginPage() {
 
       console.log("[v0] User role:", userData.role)
 
+      if (userData.organizationId) {
+        console.log("[v0] User organization:", userData.organizationId)
+      }
+
       showToast.success(`Welcome back, ${userData.name || "User"}!`)
 
-      // Wait a bit for state to fully update before navigating
       setTimeout(() => {
         console.log("[v0] Navigating to dashboard for role:", userData.role)
         navigate("/dashboard", { replace: true })

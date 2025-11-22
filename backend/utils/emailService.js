@@ -129,4 +129,67 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
   }
 };
 
+export const sendInviteEmail = async (email, token, role, inviterName) => {
+  const inviteUrl = `${
+    process.env.FRONTEND_URL || "http://localhost:5173"
+  }/accept-invite?token=${token}`;
+
+  const roleDisplayNames = {
+    "ict-manager": "ICT Manager",
+    "operations-manager": "Operations Manager",
+    agronomist: "Agronomist",
+    supervisor: "Supervisor",
+  };
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #e8f5e9;">
+      <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h1 style="color: #2e7d32; text-align: center; margin-bottom: 20px;">You've Been Invited!</h1>
+        
+        <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">Hello,</p>
+        
+        <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+          <strong>${inviterName}</strong> has invited you to join Great Rift Coffee Management System as a <strong>${roleDisplayNames[role]}</strong>.
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${inviteUrl}" style="background-color: #2e7d32; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
+            Accept Invitation
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          Click the button above to set up your account and define your password.
+        </p>
+        
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          This invitation will expire in 7 days.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        
+        <p style="color: #999; font-size: 12px; text-align: center;">
+          If you didn't expect this invitation, you can safely ignore this email.
+        </p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const result = await sendEmail({
+      email,
+      subject: `Invitation to Join Great Rift Coffee as ${roleDisplayNames[role]}`,
+      html,
+    });
+    console.log("[Email Service] Invite email sent to:", email);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error(
+      "[Email Service] Failed to send invite email:",
+      error.message
+    );
+    throw error;
+  }
+};
+
 export default sendEmail;
