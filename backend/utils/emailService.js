@@ -4,7 +4,7 @@ const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_SECURE === "true",
+    secure: process.env.EMAIL_SECURE === "false",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
@@ -66,7 +66,7 @@ export const sendVerificationEmail = async (email, verificationToken) => {
   try {
     const result = await sendEmail({
       email,
-      subject: "Verify Your Email - Great Rift Coffee Management System",
+      subject: "Verify Your Email - Great Rift Coffee Team",
       html,
     });
     console.log("[Email Service] Verification email sent to:", email);

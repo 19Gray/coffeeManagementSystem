@@ -21,7 +21,7 @@ function VerifyEmailPage() {
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/verify-email`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5173'}/api/auth/verify-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),

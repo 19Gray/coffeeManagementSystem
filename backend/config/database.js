@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
-    console.log("[v0] MongoDB URI exists:", !!process.env.MONGO_URI);
+    console.log("MongoDB URI exists:", !!process.env.MONGO_URI);
     console.log(
-      "[v0] MongoDB URI starts with:",
+      "MongoDB URI starts with:",
       process.env.MONGO_URI?.substring(0, 30)
     );
 
@@ -13,10 +13,10 @@ const connectDB = async () => {
       useUnifiedTopology: true,
     });
 
-    console.log(`[v0] MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`[v0] MongoDB Error: ${error.message}`);
-    console.error("[v0] Full error:", error);
+    console.error(`MongoDB Error: ${error.message}`);
+    console.error("Full error:", error);
     process.exit(1);
   }
 };

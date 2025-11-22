@@ -174,7 +174,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           {[
             { icon: FiMail, label: 'Email', value: 'support@greatrift.com' },
-            { icon: FiPhone, label: 'Phone', value: '+1 (555) 123-4567' },
+            { icon: FiPhone, label: 'Phone', value: '+254 112345555' },
             { icon: FiMapPin, label: 'Location', value: 'Kenya, East Africa' }
           ].map((contact, idx) => {
             const IconComponent = contact.icon
