@@ -7,16 +7,16 @@ import {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } from "../utils/emailService.js";
-import {
-  generateVerificationToken,
-  generateResetToken,
-  hashToken,
-} from "../utils/tokenUtils.js";
+import { generateResetToken, hashToken } from "../utils/tokenUtils.js";
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || "7d",
   });
+};
+
+const generateOTP = () => {
+  return Math.floor(1000000 + Math.random() * 9000000).toString();
 };
 
 export const register = asyncHandler(async (req, res, next) => {
@@ -28,13 +28,11 @@ export const register = asyncHandler(async (req, res, next) => {
     return next(new AppError("Please provide all required fields", 400));
   }
 
-  // Check if user already exists (including pending verification)
   const userExists = await User.findOne({ email });
   if (userExists) {
     return next(new AppError("Email already registered", 400));
   }
 
-  // Validate role-based signup rules
   if (["agronomist", "supervisor"].includes(role)) {
     if (!signupCode) {
       return next(
@@ -62,8 +60,22 @@ export const register = asyncHandler(async (req, res, next) => {
     }
   }
 
-  const verificationToken = generateVerificationToken();
-  const hashedToken = hashToken(verificationToken);
+  const isEmailConfigured =
+    process.env.EMAIL_USER &&
+    process.env.EMAIL_PASSWORD &&
+    process.env.EMAIL_PASSWORD !== "your-actual-google-app-password";
+
+  if (!isEmailConfigured) {
+    return next(
+      new AppError(
+        "Email service is not configured. Please contact the administrator.",
+        500
+      )
+    );
+  }
+
+  const otp = generateOTP();
+  const hashedOTP = hashToken(otp);
 
   let signupData;
   try {
@@ -73,9 +85,9 @@ export const register = asyncHandler(async (req, res, next) => {
       password,
       role: role || "farm-worker",
       phone: phone || "",
-      verificationToken: hashedToken,
-      verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      isVerified: false, // User is not verified yet
+      verificationOTP: hashedOTP,
+      verificationTokenExpiry: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+      isVerified: false,
     });
     console.log("[v0] Signup data stored for:", email);
   } catch (createError) {
@@ -85,46 +97,45 @@ export const register = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Send verification email
   try {
-    await sendVerificationEmail(email, verificationToken);
-    console.log("[v0] Verification email sent to:", email);
+    await sendVerificationEmail(email, otp, name);
+    console.log("[v0] Verification OTP sent to:", email);
+
+    res.status(201).json({
+      success: true,
+      message: "Signup successful! Check your email for the verification code.",
+      email: email,
+      verificationSent: true,
+    });
   } catch (error) {
     console.error("[v0] Failed to send verification email:", error.message);
-    // Delete the signup record if email fails
     await User.deleteOne({ _id: signupData._id });
     return next(
       new AppError("Failed to send verification email. Please try again.", 500)
     );
   }
-
-  res.status(201).json({
-    success: true,
-    message: "Signup successful! Check your email to verify your account.",
-    email: email,
-    verificationSent: true,
-  });
 });
 
 export const verifyEmail = asyncHandler(async (req, res, next) => {
-  const { token } = req.body;
+  const { email, otp } = req.body;
 
-  if (!token) {
-    return next(new AppError("Verification token is required", 400));
+  if (!email || !otp) {
+    return next(new AppError("Email and OTP are required", 400));
   }
 
-  const hashedToken = hashToken(token);
+  const hashedOTP = hashToken(otp);
   const user = await User.findOne({
-    verificationToken: hashedToken,
+    email: email.toLowerCase(),
+    verificationOTP: hashedOTP,
     verificationTokenExpiry: { $gt: Date.now() },
   });
 
   if (!user) {
-    return next(new AppError("Invalid or expired verification token", 400));
+    return next(new AppError("Invalid or expired OTP", 400));
   }
 
   user.isVerified = true;
-  user.verificationToken = null;
+  user.verificationOTP = null;
   user.verificationTokenExpiry = null;
   await user.save();
 
@@ -140,9 +151,50 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role,
       isVerified: user.isVerified,
     },
   });
+});
+
+export const resendOTP = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return next(new AppError("Email is required", 400));
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() });
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  if (user.isVerified) {
+    return next(new AppError("Email already verified", 400));
+  }
+
+  const otp = generateOTP();
+  const hashedOTP = hashToken(otp);
+
+  user.verificationOTP = hashedOTP;
+  user.verificationTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
+  await user.save();
+
+  try {
+    await sendVerificationEmail(email, otp, user.name);
+    console.log("[v0] Verification OTP resent to:", email);
+
+    res.status(200).json({
+      success: true,
+      message: "Verification code sent to your email.",
+    });
+  } catch (error) {
+    console.error("[v0] Failed to resend verification email:", error.message);
+    return next(
+      new AppError("Failed to send verification email. Please try again.", 500)
+    );
+  }
 });
 
 export const login = asyncHandler(async (req, res, next) => {

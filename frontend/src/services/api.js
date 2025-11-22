@@ -1,7 +1,6 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// Create axios-like API instance
 export const apiCall = async (endpoint, options = {}) => {
   const { method = "GET", body = null, headers = {} } = options;
 
@@ -42,7 +41,7 @@ export const apiCall = async (endpoint, options = {}) => {
       throw new Error(errorMessage);
     }
 
-    return data;
+    return { data };
   } catch (error) {
     console.error("[API Error]", error.message);
     throw error;
@@ -51,17 +50,27 @@ export const apiCall = async (endpoint, options = {}) => {
 
 // Auth APIs
 export const authAPI = {
-  login: (email, password) =>
-    apiCall("/auth/login", {
-      method: "POST",
-      body: { email, password },
-    }),
+  login: async (email, password) => {
+    try {
+      const result = await apiCall("/auth/login", {
+        method: "POST",
+        body: { email, password },
+      });
+      console.log("[v0] authAPI.login result:", result);
+      return result.data;
+    } catch (error) {
+      console.error("[v0] authAPI.login error:", error);
+      throw error;
+    }
+  },
 
-  signup: (name, email, password, role) =>
-    apiCall("/auth/register", {
+  signup: async (name, email, password, role) => {
+    const result = await apiCall("/auth/register", {
       method: "POST",
       body: { name, email, password, role },
-    }),
+    });
+    return result.data;
+  },
 
   getProfile: () => apiCall("/auth/profile"),
 

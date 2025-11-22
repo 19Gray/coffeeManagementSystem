@@ -3,11 +3,14 @@ import nodemailer from "nodemailer";
 const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_SECURE === "false",
+    port: Number.parseInt(process.env.EMAIL_PORT) || 587,
+    secure: false, // Use STARTTLS instead of direct SSL
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false, // Accept self-signed certificates in development
     },
   });
 
@@ -25,34 +28,34 @@ const sendEmail = async (options) => {
   return info;
 };
 
-export const sendVerificationEmail = async (email, verificationToken) => {
-  const verificationUrl = `${
-    process.env.FRONTEND_URL || "http://localhost:5173"
-  }/verify-email?token=${verificationToken}`;
-
+export const sendVerificationEmail = async (email, otp, userName) => {
   const html = `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5ede0;">
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #e8f5e9;">
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h1 style="color: #B8652A; text-align: center; margin-bottom: 20px;">Welcome to Great Rift Coffee</h1>
+        <h1 style="color: #2e7d32; text-align: center; margin-bottom: 20px;">Welcome to Great Rift Coffee</h1>
         
-        <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">Hello,</p>
+        <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">Hello ${
+          userName || "there"
+        },</p>
         
         <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          Thank you for registering! To complete your sign-up process, please verify your email address by clicking the link below:
+          Thank you for registering with Great Rift Coffee Management System! To complete your sign-up process, please use the following One-Time Password (OTP):
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationUrl}" style="background-color: #B8652A; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-            Verify Email
-          </a>
+          <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; display: inline-block;">
+            <p style="color: #666; font-size: 14px; margin: 0 0 10px 0;">Your verification code:</p>
+            <p style="font-size: 36px; font-weight: bold; color: #2e7d32; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">
+              ${otp}
+            </p>
+          </div>
         </div>
         
         <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-          Or copy and paste this link: <br/>
-          <a href="${verificationUrl}" style="color: #B8652A; word-break: break-all;">${verificationUrl}</a>
+          Enter this code on the verification page to activate your account.
         </p>
         
-        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">This link will expire in 24 hours.</p>
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">This code will expire in 15 minutes.</p>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
         
@@ -66,10 +69,10 @@ export const sendVerificationEmail = async (email, verificationToken) => {
   try {
     const result = await sendEmail({
       email,
-      subject: "Verify Your Email - Great Rift Coffee Team",
+      subject: "Verify Your Email - Great Rift Coffee Management System",
       html,
     });
-    console.log("[Email Service] Verification email sent to:", email);
+    console.log("[Email Service] Verification OTP sent to:", email);
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error(
@@ -86,16 +89,16 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
   }/reset-password?token=${resetToken}`;
 
   const html = `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5ede0;">
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #e8f5e9;">
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h1 style="color: #B8652A; text-align: center; margin-bottom: 20px;">Password Reset Request</h1>
+        <h1 style="color: #2e7d32; text-align: center; margin-bottom: 20px;">Password Reset Request</h1>
         
         <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
           You requested to reset your password. Click the link below to set a new password:
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" style="background-color: #B8652A; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+          <a href="${resetUrl}" style="background-color: #2e7d32; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
             Reset Password
           </a>
         </div>

@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import AuthContext from './AuthContext'
-import { authAPI } from '../services/api'
+"use client"
+
+import { useState, useEffect } from "react"
+import AuthContext from "./AuthContext"
+import { authAPI } from "../services/api"
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
@@ -11,28 +13,28 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const token = localStorage.getItem('authToken')
-        const userData = localStorage.getItem('user')
+        const token = localStorage.getItem("authToken")
+        const userData = localStorage.getItem("user")
 
         if (token && userData) {
           try {
             const parsedUser = JSON.parse(userData)
             setUser(parsedUser)
-            
+
             // Optional: Verify token is still valid by fetching profile
             try {
               const profileData = await authAPI.getProfile()
               if (profileData.data) {
                 setUser(profileData.data)
-                localStorage.setItem('user', JSON.stringify(profileData.data))
+                localStorage.setItem("user", JSON.stringify(profileData.data))
               }
             } catch (profileError) {
-              console.warn('Profile fetch failed, using cached user data', profileError)
+              console.warn("Profile fetch failed, using cached user data", profileError)
             }
           } catch (parseError) {
-            console.error('Failed to parse user data', parseError)
-            localStorage.removeItem('authToken')
-            localStorage.removeItem('user')
+            console.error("Failed to parse user data", parseError)
+            localStorage.removeItem("authToken")
+            localStorage.removeItem("user")
           }
         }
       } finally {
@@ -47,17 +49,23 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null)
+      console.log("[v0] Calling login API")
       const response = await authAPI.login(email, password)
+      console.log("[v0] Login response:", response)
+
       const userData = response.user
-      
-      localStorage.setItem('authToken', response.token)
-      localStorage.setItem('user', JSON.stringify(userData))
+
+      localStorage.setItem("authToken", response.token)
+      localStorage.setItem("user", JSON.stringify(userData))
+
       setUser(userData)
-      
+      console.log("[v0] User state set:", userData)
+
       return userData
     } catch (err) {
-      const errorMessage = err.message || 'Login failed'
+      const errorMessage = err.message || "Login failed"
       setError(errorMessage)
+      console.error("[v0] Login error in AuthProvider:", errorMessage)
       throw err
     }
   }
@@ -68,14 +76,14 @@ export const AuthProvider = ({ children }) => {
       setError(null)
       const response = await authAPI.signup(name, email, password, role)
       const userData = response.user
-      
-      localStorage.setItem('authToken', response.token)
-      localStorage.setItem('user', JSON.stringify(userData))
+
+      localStorage.setItem("authToken", response.token)
+      localStorage.setItem("user", JSON.stringify(userData))
       setUser(userData)
-      
+
       return userData
     } catch (err) {
-      const errorMessage = err.message || 'Signup failed'
+      const errorMessage = err.message || "Signup failed"
       setError(errorMessage)
       throw err
     }
@@ -83,8 +91,8 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('authToken')
-    localStorage.removeItem('user')
+    localStorage.removeItem("authToken")
+    localStorage.removeItem("user")
     setUser(null)
     setError(null)
   }
@@ -95,13 +103,13 @@ export const AuthProvider = ({ children }) => {
       setError(null)
       const response = await authAPI.updateProfile(profileData)
       const updatedUser = response.data
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+
+      localStorage.setItem("user", JSON.stringify(updatedUser))
       setUser(updatedUser)
-      
+
       return updatedUser
     } catch (err) {
-      const errorMessage = err.message || 'Update failed'
+      const errorMessage = err.message || "Update failed"
       setError(errorMessage)
       throw err
     }
@@ -116,14 +124,10 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     updateProfile,
-    isAuthenticated: !!user && !!localStorage.getItem('authToken'),
+    isAuthenticated: !!user && !!localStorage.getItem("authToken"),
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export default AuthProvider
